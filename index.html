@@ -2,68 +2,154 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Live SaaS</title>
+  <title>🚀 PostgreSQL + Auth + Storage</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; }
-    button { padding:1rem 2rem; margin:0.5rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; cursor:pointer; }
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:600px; margin:0 auto; }
+    input { width:100%; padding:0.8rem; margin:0.3rem 0; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; }
+    button { padding:0.8rem 1.5rem; margin:0.3rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; cursor:pointer; font-weight:bold; }
     button:hover { background:#00ff9d; color:#0a0a0f; }
+    #user-ui { display:none; }
+    .hidden { display:none !important; }
+    small { color:#666; }
   </style>
 </head>
 <body>
   <h1>🚀 PostgreSQL + Auth + Storage</h1>
+  
+  <!-- Auth UI -->
   <div id="auth-ui">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
-    <button onclick="signIn()">Sign In</button>
-    <button onclick="signUp()">Sign Up</button>
-    <button id="google">🔵 Google</button>
-    <button id="github">🐙 GitHub</button>
+    <div style="margin:1rem 0">
+      <button onclick="signIn()">Sign In</button>
+      <button onclick="signUp()">Sign Up</button>
+    </div>
+    <div style="margin:1rem 0">
+      <button id="google">🔵 Google</button>
+      <button id="github">🐙 GitHub</button>
+    </div>
+    <small>✅ No VPS. No config. Just code.</small>
   </div>
-  <div id="user-ui" style="display:none">
-    <p>👤 <span id="user-email"></span></p>
+
+  <!-- User UI (shown after login) -->
+  <div id="user-ui">
+    <p>👤 Logged in as: <strong id="user-email"></strong></p>
     <button onclick="signOut()">🚪 Logout</button>
+    <div style="margin-top:2rem">
+      <textarea id="message" placeholder="Type a message..." style="width:100%; min-height:80px; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; padding:0.5rem;"></textarea>
+      <button onclick="postMessage()" style="margin-top:0.5rem">💬 Post Message</button>
+    </div>
+    <div id="messages" style="margin-top:1rem; max-height:300px; overflow-y:auto"></div>
   </div>
-  <div id="messages" style="margin-top:2rem"></div>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
-    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+  <!-- Supabase CDN + App Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // 1. Initialize Supabase
+    const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    // Auth UI toggle
+    // 2. DOM Elements
+    const authUI = document.getElementById('auth-ui')
+    const userUI = document.getElementById('user-ui')
+    const userEmailEl = document.getElementById('user-email')
+    const messagesEl = document.getElementById('messages')
+
+    // 3. Auth State Handler
+    async function checkSession() {
+      const {  { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        showUser(session.user.email)
+        loadMessages()
+      }
+    }
+
     function showUser(email) {
-      document.getElementById('auth-ui').style.display = 'none'
-      document.getElementById('user-ui').style.display = 'block'
-      document.getElementById('user-email').textContent = email
+      authUI.classList.add('hidden')
+      userUI.classList.remove('hidden')
+      userEmailEl.textContent = email
     }
+
     function showAuth() {
-      document.getElementById('auth-ui').style.display = 'block'
-      document.getElementById('user-ui').style.display = 'none'
+      authUI.classList.remove('hidden')
+      userUI.classList.add('hidden')
     }
 
-    // Check session on load
-    const {  { session } } = await supabase.auth.getSession()
-    if (session?.user) showUser(session.user.email)
+    // 4. Auth Actions
+    async function signIn() {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) alert('❌ ' + error.message)
+      else checkSession()
+    }
 
-    // Auth handlers
-    window.signIn = async () => { /* your logic */ }
-    window.signUp = async () => { /* your logic */ }
-    window.signOut = async () => { await supabase.auth.signOut(); showAuth(); }
+    async function signUp() {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) alert('❌ ' + error.message)
+      else alert('✅ Check your email to confirm')
+    }
 
-    // OAuth buttons (PRODUCTION URL)
+    async function signOut() {
+      await supabase.auth.signOut()
+      showAuth()
+    }
+
+    // 5. OAuth Buttons (PRODUCTION URL)
     document.getElementById('google').onclick = async () => {
-      await supabase.auth.signInWithOAuth({ 
+      await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: 'https://project-4rhm6.vercel.app' }
       })
     }
+
     document.getElementById('github').onclick = async () => {
-      await supabase.auth.signInWithOAuth({ 
+      await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: { redirectTo: 'https://project-4rhm6.vercel.app' }
       })
     }
 
-    console.log('✅ App loaded')
+    // 6. Message Functions
+    async function postMessage() {
+      const content = document.getElementById('message').value.trim()
+      if (!content) return
+      const { error } = await supabase.from('messages').insert({
+        content,
+        user_email: (await supabase.auth.getUser()).data.user?.email || 'anon'
+      })
+      if (error) alert('❌ ' + error.message)
+      else {
+        document.getElementById('message').value = ''
+        loadMessages()
+      }
+    }
+
+    async function loadMessages() {
+      const {  } = await supabase.from('messages').select('*').order('created_at', { ascending: false }).limit(20)
+      messagesEl.innerHTML = data?.length 
+        ? data.map(m => `<div style="margin:0.5rem 0; padding:0.5rem; background:#1a1a2e; border-left:3px solid #00ff9d;"><strong>${m.user_email || 'anon'}:</strong> ${m.content}<br><small>${new Date(m.created_at).toLocaleString()}</small></div>`).join('')
+        : '<em>No messages yet. Be the first! ✨</em>'
+    }
+
+    // 7. Init on Load
+    window.addEventListener('load', () => {
+      checkSession()
+      // Handle OAuth redirect return
+      if (window.location.hash.includes('access_token')) {
+        checkSession()
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    })
+
+    // Expose functions for onclick attributes
+    window.signIn = signIn
+    window.signUp = signUp
+    window.signOut = signOut
+    window.postMessage = postMessage
   </script>
 </body>
 </html>
