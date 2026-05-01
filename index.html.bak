@@ -1,0 +1,22 @@
+// Google
+document.getElementById('google').onclick = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { 
+      // Hardcode production URL. Remove this line for local testing.
+      redirectTo: 'https://project-4rhm6.vercel.app' 
+    }
+  })
+  if (error) alert('❌ ' + error.message)
+}
+
+// GitHub
+document.getElementById('github').onclick = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: { 
+      redirectTo: 'https://project-4rhm6.vercel.app' 
+    }
+  })
+  if (error) alert('❌ ' + error.message)
+}

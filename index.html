@@ -1,22 +1,69 @@
-// Google
-document.getElementById('google').onclick = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { 
-      // Hardcode production URL. Remove this line for local testing.
-      redirectTo: 'https://project-4rhm6.vercel.app' 
-    }
-  })
-  if (error) alert('❌ ' + error.message)
-}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Live SaaS</title>
+  <style>
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; }
+    button { padding:1rem 2rem; margin:0.5rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; cursor:pointer; }
+    button:hover { background:#00ff9d; color:#0a0a0f; }
+  </style>
+</head>
+<body>
+  <h1>🚀 PostgreSQL + Auth + Storage</h1>
+  <div id="auth-ui">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="signIn()">Sign In</button>
+    <button onclick="signUp()">Sign Up</button>
+    <button id="google">🔵 Google</button>
+    <button id="github">🐙 GitHub</button>
+  </div>
+  <div id="user-ui" style="display:none">
+    <p>👤 <span id="user-email"></span></p>
+    <button onclick="signOut()">🚪 Logout</button>
+  </div>
+  <div id="messages" style="margin-top:2rem"></div>
 
-// GitHub
-document.getElementById('github').onclick = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: { 
-      redirectTo: 'https://project-4rhm6.vercel.app' 
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+
+    // Auth UI toggle
+    function showUser(email) {
+      document.getElementById('auth-ui').style.display = 'none'
+      document.getElementById('user-ui').style.display = 'block'
+      document.getElementById('user-email').textContent = email
     }
-  })
-  if (error) alert('❌ ' + error.message)
-}
+    function showAuth() {
+      document.getElementById('auth-ui').style.display = 'block'
+      document.getElementById('user-ui').style.display = 'none'
+    }
+
+    // Check session on load
+    const {  { session } } = await supabase.auth.getSession()
+    if (session?.user) showUser(session.user.email)
+
+    // Auth handlers
+    window.signIn = async () => { /* your logic */ }
+    window.signUp = async () => { /* your logic */ }
+    window.signOut = async () => { await supabase.auth.signOut(); showAuth(); }
+
+    // OAuth buttons (PRODUCTION URL)
+    document.getElementById('google').onclick = async () => {
+      await supabase.auth.signInWithOAuth({ 
+        provider: 'google',
+        options: { redirectTo: 'https://project-4rhm6.vercel.app' }
+      })
+    }
+    document.getElementById('github').onclick = async () => {
+      await supabase.auth.signInWithOAuth({ 
+        provider: 'github',
+        options: { redirectTo: 'https://project-4rhm6.vercel.app' }
+      })
+    }
+
+    console.log('✅ App loaded')
+  </script>
+</body>
+</html>
