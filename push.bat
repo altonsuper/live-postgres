@@ -1,30 +1,14 @@
 @echo off
-:: push.bat — VERBOSE push with error checking
-echo 🚀 Starting push...
-echo.
-
-echo 📦 Staging changes...
+:: push.bat — NO CHECKS. JUST PUSH.
+echo 🚀 Pushing to GitHub...
 git add .
-if %errorlevel% neq 0 echo ❌ git add failed & pause & exit /b 1
-
-echo 💬 Committing...
-git commit -m "auto: %date% %time%"
-if %errorlevel% neq 0 (
-    echo ⚠️ Nothing to commit (no changes) 
+git commit -m "auto: %date% %time%" >nul 2>&1
+git push origin main
+if %errorlevel% equ 0 (
+    echo ✅ Pushed! Vercel auto-deploying...
+    echo 🌐 https://project-4rhm6.vercel.app
+    echo 💡 Hard-refresh: Ctrl+Shift+R
 ) else (
-    echo ✅ Committed
+    echo ❌ Push failed. Run 'git status' to debug.
 )
-
-echo 📤 Pushing to GitHub...
-git push
-if %errorlevel% neq 0 (
-    echo ❌ Push failed. Check: 1) git remote -v 2) GitHub token 3) Network
-    pause
-    exit /b 1
-)
-
-echo.
-echo ✅ PUSH SUCCESS!
-echo 🌐 https://project-4rhm6.vercel.app
-echo 📋 Vercel build logs: https://vercel.com/altonsupers-projects/project-4rhm6
 pause
