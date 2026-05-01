@@ -2,26 +2,67 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Live Postgres + Realtime</title>
+  <title>Live App + Auth + Storage</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; }
-    .msg { background:#1a1a2e; padding:1rem; margin:0.5rem 0; border-left:3px solid #00ff9d; animation:fade 0.3s; }
-    @keyframes fade { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-    form { margin:1rem 0; display:flex; gap:0.5rem; }
-    input { flex:1; padding:0.5rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; }
-    button { padding:0.5rem 1rem; background:#00ff9d; color:#0a0a0f; border:none; font-weight:bold; cursor:pointer; }
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:1rem; max-width:900px; margin:0 auto; }
+    .card { background:#1a1a2e; padding:1rem; margin:0.5rem 0; border-left:3px solid #00ff9d; }
+    .hidden { display:none; }
+    input, button { padding:0.5rem; margin:0.25rem 0; background:#0a0a0f; border:1px solid #00ff9d; color:#00ff9d; }
+    button { cursor:pointer; font-weight:bold; }
+    img { max-width:100%; border-radius:4px; margin:0.5rem 0; }
+    .auth-bar { display:flex; gap:0.5rem; align-items:center; margin:1rem 0; }
   </style>
 </head>
 <body>
-  <h1>🚀 PostgreSQL Live + Realtime</h1>
+  <h1>🚀 PostgreSQL + Auth + Storage</h1>
   
-  <!-- Add new message -->
-  <form id="form">
-    <input id="input" placeholder="Type a message..." required>
-    <button type="submit">Send</button>
-  </form>
-  
-  <div id="app">Loading...</div>
+  <!-- Auth Section -->
+  <!-- Auth Section -->
+  <div id="auth-section" class="card">
+    <!-- Email/Password (keep for fallback) -->
+    <div id="email-auth">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password (6+ chars)">
+      <button id="signup">Sign Up</button>
+      <button id="login">Log In</button>
+    </div>
+    
+    <!-- Divider -->
+    <div style="text-align:center;margin:1rem 0;color:#666">─ or ─</div>
+    
+    <!-- Social Buttons -->
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      <button id="google-login" style="background:#fff;color:#333;border:1px solid #ccc">
+        <span style="margin-right:0.25rem">🔵</span> Google
+      </button>
+      <button id="github-login" style="background:#333;color:#fff;border:1px solid #555">
+        <span style="margin-right:0.25rem">🐙</span> GitHub
+      </button>
+    </div>
+    
+    <button id="logout" class="hidden" style="margin-left:auto">Log Out</button>
+    <div id="user-info" class="hidden" style="margin-top:0.5rem">
+      👤 <span id="user-email"></span>
+      <small id="user-provider" style="color:#666;display:block"></small>
+    </div>
+  </div>
+
+  <!-- Message Section (Auth Required) -->
+  <div id="msg-section" class="card hidden">
+    <form id="msg-form">
+      <input id="msg-input" placeholder="Type a message..." required>
+      <button type="submit">Send</button>
+    </form>
+    <div id="messages"></div>
+  </div>
+
+  <!-- Storage Section (Auth Required) -->
+  <div id="storage-section" class="card hidden">
+    <h3>📁 Upload Image</h3>
+    <input type="file" id="file-input" accept="image/*">
+    <button id="upload-btn">Upload</button>
+    <div id="uploads"></div>
+  </div>
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
@@ -30,45 +71,117 @@
       'https://zmtudgbebtnoiysebeli.supabase.co',
       'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
     )
-    const app = document.getElementById('app')
-    const form = document.getElementById('form')
-    const input = document.getElementById('input')
-
-    // 1. Load existing messages
-    async function load() {
-      const { data } = await supabase.from('messages').select('content,created_at').order('created_at', { ascending:false })
-      render(data || [])
+    
+    // DOM elements
+    const authSec = document.getElementById('auth-section')
+    const msgSec = document.getElementById('msg-section')
+    const storageSec = document.getElementById('storage-section')
+    const userInfo = document.getElementById('user-info')
+    const userEmail = document.getElementById('user-email')
+    const logoutBtn = document.getElementById('logout')
+    
+    // 1. Check auth state on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthChange(session?.user)
+    })
+    
+    // 2. Listen for auth changes (login/logout)
+    supabase.auth.onAuthStateChange((event, session) => {
+      handleAuthChange(session?.user)
+    })
+    
+    function handleAuthChange(user) {
+      if (user) {
+        // Authenticated: show app features
+        authSec.querySelector('#signup').classList.add('hidden')
+        authSec.querySelector('#login').classList.add('hidden')
+        authSec.querySelector('#email').classList.add('hidden')
+        authSec.querySelector('#password').classList.add('hidden')
+        logoutBtn.classList.remove('hidden')
+        userInfo.classList.remove('hidden')
+        userEmail.textContent = user.email
+        msgSec.classList.remove('hidden')
+        storageSec.classList.remove('hidden')
+        loadMessages()
+        loadUploads()
+      } else {
+        // Guest: show only auth
+        authSec.querySelector('#signup').classList.remove('hidden')
+        authSec.querySelector('#login').classList.remove('hidden')
+        authSec.querySelector('#email').classList.remove('hidden')
+        authSec.querySelector('#password').classList.remove('hidden')
+        logoutBtn.classList.add('hidden')
+        userInfo.classList.add('hidden')
+        msgSec.classList.add('hidden')
+        storageSec.classList.add('hidden')
+      }
     }
-
-    // 2. Render messages to DOM
-    function render(messages) {
-      app.innerHTML = messages.map(m => 
-        `<div class="msg">${m.content}<br><small>${new Date(m.created_at).toLocaleTimeString()}</small></div>`
-      ).join('') || 'No messages yet'
+    
+    // 3. Sign up / Login / Logout
+    document.getElementById('signup').onclick = async () => {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) alert('❌ ' + error.message)
+      else alert('✅ Check email for confirmation link')
     }
-
-    // 3. Send new message
-    form.onsubmit = async (e) => {
+    document.getElementById('login').onclick = async () => {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) alert('❌ ' + error.message)
+    }
+    logoutBtn.onclick = async () => {
+      await supabase.auth.signOut()
+      location.reload()
+    }
+    
+    // 4. Messages (Realtime + RLS)
+    async function loadMessages() {
+      const { data } = await supabase.from('messages').select('content,created_at,user_email').order('created_at', { ascending:false })
+      renderMessages(data || [])
+    }
+    function renderMessages(messages) {
+      document.getElementById('messages').innerHTML = messages.map(m => 
+        `<div class="card"><strong>${m.user_email || 'anon'}:</strong> ${m.content}<br><small>${new Date(m.created_at).toLocaleTimeString()}</small></div>`
+      ).join('') || '<em>No messages yet</em>'
+    }
+    document.getElementById('msg-form').onsubmit = async (e) => {
       e.preventDefault()
-      const content = input.value.trim()
+      const content = document.getElementById('msg-input').value.trim()
       if (!content) return
-      await supabase.from('messages').insert({ content })
-      input.value = ''
+      const { data: { user } } = await supabase.auth.getUser()
+      await supabase.from('messages').insert({ content, user_email: user?.email })
+      document.getElementById('msg-input').value = ''
     }
-
-    // 4. REAL-TIME: Listen for new inserts
+    // Realtime subscription
     supabase.channel('public:messages')
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, payload => {
-        // Prepend new message with animation
         const el = document.createElement('div')
-        el.className = 'msg'
-        el.innerHTML = `${payload.new.content}<br><small>${new Date(payload.new.created_at).toLocaleTimeString()}</small>`
-        app.insertBefore(el, app.firstChild)
+        el.className = 'card'
+        el.innerHTML = `<strong>${payload.new.user_email || 'anon'}:</strong> ${payload.new.content}<br><small>${new Date(payload.new.created_at).toLocaleTimeString()}</small>`
+        document.getElementById('messages').prepend(el)
       })
       .subscribe()
-
-    // Start
-    load()
+    
+    // 5. Storage (File Upload)
+    async function loadUploads() {
+      const { data } = await supabase.storage.from('uploads').list('public', { limit: 10 })
+      const urls = await Promise.all((data || []).map(async file => {
+        const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(`public/${file.name}`)
+        return `<div class="card"><img src="${publicUrl}"><br><small>${file.name}</small></div>`
+      }))
+      document.getElementById('uploads').innerHTML = urls.join('') || '<em>No uploads yet</em>'
+    }
+    document.getElementById('upload-btn').onclick = async () => {
+      const file = document.getElementById('file-input').files[0]
+      if (!file) return alert('Select a file first')
+      const { data: { user } } = await supabase.auth.getUser()
+      const fileName = `${user?.id}/${Date.now()}-${file.name.replace(/\s/g,'_')}`
+      const { error } = await supabase.storage.from('uploads').upload(`public/${fileName}`, file)
+      if (error) alert('❌ ' + error.message)
+      else { loadUploads(); document.getElementById('file-input').value = '' }
+    }
   </script>
 </body>
 </html>
