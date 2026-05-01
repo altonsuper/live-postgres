@@ -1,0 +1,10 @@
+# 1. Save the index.html above (overwrite existing)
+# 2. Run this:
+.\push.bat
+
+# 3. After push finishes, hard-refresh live site:
+#    Open: https://project-4rhm6.vercel.app → Press Ctrl+Shift+R
+
+# 4. Test auth locally (proper server):
+#    In NEW terminal: python -m http.server 8080
+#    Then open: http://localhost:8080
