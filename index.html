@@ -1,59 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Auth Test</title>
-  <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; }
-    button { padding:1rem 2rem; margin:0.5rem; font-size:1.1rem; cursor:pointer; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; }
-    button:hover { background:#00ff9d; color:#0a0a0f; }
-    #log { margin-top:2rem; padding:1rem; background:#1a1a2e; border-left:4px solid #00ff9d; min-height:100px; }
-  </style>
-</head>
-<body>
-  <h1>🔐 Auth Test</h1>
-  <button id="google">🔵 Google Login</button>
-  <button id="github">🐙 GitHub Login</button>
-  <div id="log">Click a button...</div>
+// Google
+document.getElementById('google').onclick = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { 
+      // Hardcode production URL. Remove this line for local testing.
+      redirectTo: 'https://project-4rhm6.vercel.app' 
+    }
+  })
+  if (error) alert('❌ ' + error.message)
+}
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
-    
-    const log = document.getElementById('log')
-    log.textContent = '✅ Supabase client loaded'
-    
-    const supabase = createClient(
-      'https://zmtudgbebtnoiysebeli.supabase.co',
-      'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
-    )
-    
-    document.getElementById('google').onclick = async () => {
-      log.textContent = '🔄 Redirecting to Google...'
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({ 
-          provider: 'google',
-          options: { redirectTo: window.location.origin }
-        })
-        if (error) log.textContent = '❌ ' + error.message
-      } catch (e) {
-        log.textContent = '❌ ' + e.message
-      }
+// GitHub
+document.getElementById('github').onclick = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: { 
+      redirectTo: 'https://project-4rhm6.vercel.app' 
     }
-    
-    document.getElementById('github').onclick = async () => {
-      log.textContent = '🔄 Redirecting to GitHub...'
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({ 
-          provider: 'github',
-          options: { redirectTo: window.location.origin }
-        })
-        if (error) log.textContent = '❌ ' + error.message
-      } catch (e) {
-        log.textContent = '❌ ' + e.message
-      }
-    }
-    
-    console.log('✅ Auth test loaded')
-  </script>
-</body>
-</html>
+  })
+  if (error) alert('❌ ' + error.message)
+}

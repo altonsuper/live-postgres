@@ -1,11 +1,24 @@
-.vercel
-# Local backups
-*.bak
-*.backup
-*.old
-*.csv
-# OS files
+# 🔒 SECRETS & CONFIG (NEVER PUSH)
+.env
+.env.*
+config.json
+config.local.json
+*.key
+*.pem
+service_role_key.txt
+copasmonthlyonsupabase.sql
+
+# 📦 DEPENDENCIES
+node_modules/
+package-lock.json
+
+# 🖥️ OS & EDITOR
 .DS_Store
 Thumbs.db
-# Env files (keep template)
-!.env.example
+.vscode/
+.idea/
+
+# 📜 LOGS
+*.log
+npm-debug.log*
+yarn-debug.log*

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard</title>
+  <style>
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:1rem; max-width:800px; margin:0 auto; }
+    .card { background:#1a1a2e; padding:1rem; margin:0.5rem 0; border-left:3px solid #00ff9d; border-radius:4px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; }
+    .stat { font-size:1.8rem; font-weight:bold; color:#fff; margin:0.5rem 0; }
+    .btn { padding:0.5rem 1rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; cursor:pointer; text-decoration:none; display:inline-block; }
+    .btn:hover { background:#00ff9d; color:#0a0a0f; }
+    .hidden { display:none; }
+    small { color:#888; }
+  </style>
+</head>
+<body>
+  <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1> Dashboard</h1>
+    <div>
+      <a href="index.html" class="btn">← Home</a>
+      <button id="logout" class="btn">🚪 Logout</button>
+    </div>
+  </nav>
+
+  <div id="loading" class="card">🔄 Loading dashboard...</div>
+  <div id="dashboard" class="hidden">
+    <div class="card">👋 Welcome, <strong id="user-email"></strong></div>
+
+    <div class="grid">
+      <div class="card">
+        <div>💬 Your Messages</div>
+        <div id="msg-count" class="stat">0</div>
+      </div>
+      <div class="card">
+        <div> Uploaded Files</div>
+        <div id="storage-count" class="stat">0</div>
+      </div>
+      <div class="card">
+        <div>🔐 Login Provider</div>
+        <div id="provider" class="stat">-</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3> Recent Activity</h3>
+      <div id="activity-list"><em>Loading...</em></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+
+    // 🔒 Auth Guard: Redirect to login if not authenticated
+    const {  { session } } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = 'index.html'
+    }
+
+    const user = session.user
+    document.getElementById('user-email').textContent = user.email
+    document.getElementById('provider').textContent = user.app_metadata?.provider?.toUpperCase() || 'EMAIL'
+
+    // 📊 Fetch User Stats
+    const { count: msgCount } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_email', user.email)
+    document.getElementById('msg-count').textContent = msgCount || 0
+
+    const { data: files } = await supabase.storage.from('uploads').list(`public/${user.id}`)
+    document.getElementById('storage-count').textContent = `${files?.length || 0} files`
+
+    //  Recent Activity
+    const {  } = await supabase
+      .from('messages')
+      .select('content, created_at')
+      .eq('user_email', user.email)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    const list = document.getElementById('activity-list')
+    list.innerHTML = data?.length 
+      ? data.map(m => `<div style="margin:0.3rem 0; padding:0.5rem; background:#0a0a0f; border-left:2px solid #00ff9d;">${m.content} <small>${new Date(m.created_at).toLocaleTimeString()}</small></div>`).join('')
+      : '<em>No activity yet. Post a message on the home page!</em>'
+
+    // 🔓 Toggle UI
+    document.getElementById('loading').classList.add('hidden')
+    document.getElementById('dashboard').classList.remove('hidden')
+
+    // 🚪 Logout
+    document.getElementById('logout').onclick = async () => {
+      await supabase.auth.signOut()
+      window.location.href = 'index.html'
+    }
+  </script>
+</body>
+</html>

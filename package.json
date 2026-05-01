@@ -3,5 +3,14 @@
   "version": "1.0.0",
   "scripts": {
     "build": "echo 'static site - no build needed'"
+  },
+  "main": "ai-bridge.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.1",
+    "pg": "^8.20.0"
   }
 }
