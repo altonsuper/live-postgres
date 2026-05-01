@@ -1,6 +1,0 @@
-# Allow batch files to run (usually already allowed)
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-# Ensure Git knows your identity (required for commits)
-git config --global user.email "altonsuper@gmail.com"
-git config --global user.name "altonsuper"
