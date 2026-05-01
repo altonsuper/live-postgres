@@ -1,1 +1,11 @@
 .vercel
+# Local backups
+*.bak
+*.backup
+*.old
+*.csv
+# OS files
+.DS_Store
+Thumbs.db
+# Env files (keep template)
+!.env.example
