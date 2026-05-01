@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Live Postgres + Realtime</title>
+  <style>
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; }
+    .msg { background:#1a1a2e; padding:1rem; margin:0.5rem 0; border-left:3px solid #00ff9d; animation:fade 0.3s; }
+    @keyframes fade { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    form { margin:1rem 0; display:flex; gap:0.5rem; }
+    input { flex:1; padding:0.5rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; }
+    button { padding:0.5rem 1rem; background:#00ff9d; color:#0a0a0f; border:none; font-weight:bold; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h1>🚀 PostgreSQL Live + Realtime</h1>
+  
+  <!-- Add new message -->
+  <form id="form">
+    <input id="input" placeholder="Type a message..." required>
+    <button type="submit">Send</button>
+  </form>
+  
+  <div id="app">Loading...</div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+    
+    const supabase = createClient(
+      'https://zmtudgbebtnoiysebeli.supabase.co',
+      'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    )
+    const app = document.getElementById('app')
+    const form = document.getElementById('form')
+    const input = document.getElementById('input')
+
+    // 1. Load existing messages
+    async function load() {
+      const { data } = await supabase.from('messages').select('content,created_at').order('created_at', { ascending:false })
+      render(data || [])
+    }
+
+    // 2. Render messages to DOM
+    function render(messages) {
+      app.innerHTML = messages.map(m => 
+        `<div class="msg">${m.content}<br><small>${new Date(m.created_at).toLocaleTimeString()}</small></div>`
+      ).join('') || 'No messages yet'
+    }
+
+    // 3. Send new message
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      const content = input.value.trim()
+      if (!content) return
+      await supabase.from('messages').insert({ content })
+      input.value = ''
+    }
+
+    // 4. REAL-TIME: Listen for new inserts
+    supabase.channel('public:messages')
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, payload => {
+        // Prepend new message with animation
+        const el = document.createElement('div')
+        el.className = 'msg'
+        el.innerHTML = `${payload.new.content}<br><small>${new Date(payload.new.created_at).toLocaleTimeString()}</small>`
+        app.insertBefore(el, app.firstChild)
+      })
+      .subscribe()
+
+    // Start
+    load()
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+[Your App]
+   ↓
+[Supabase SDK] → handles auth, real-time, storage metadata
+   ↓
+[Supabase PostgREST] → auto-API on your *root PostgreSQL*
+   ↓
+[Your Root PostgreSQL] ← single source of truth
+   ├── public.app_data (your tables)
+   ├── auth.* (Supabase-managed)
+   ├── storage.* (Supabase-managed)
+   └── extensions: pgvector, postgis, etc.
