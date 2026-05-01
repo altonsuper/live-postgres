@@ -1,15 +1,30 @@
 @echo off
-:: push.bat — Pure git push. That's it.
-:: Usage: Double-click or run: .\push.bat
+:: push.bat — VERBOSE push with error checking
+echo 🚀 Starting push...
+echo.
 
-echo 🚀 Pushing to GitHub...
+echo 📦 Staging changes...
 git add .
-git commit -m "auto: %date% %time%" >nul 2>&1
-git push
-if %errorlevel% equ 0 (
-    echo ✅ Pushed! Vercel auto-deploying...
-    echo 🌐 https://project-4rhm6.vercel.app
+if %errorlevel% neq 0 echo ❌ git add failed & pause & exit /b 1
+
+echo 💬 Committing...
+git commit -m "auto: %date% %time%"
+if %errorlevel% neq 0 (
+    echo ⚠️ Nothing to commit (no changes) 
 ) else (
-    echo ❌ Push failed. Check: 1) Git logged in 2) Repo exists 3) Network
+    echo ✅ Committed
 )
+
+echo 📤 Pushing to GitHub...
+git push
+if %errorlevel% neq 0 (
+    echo ❌ Push failed. Check: 1) git remote -v 2) GitHub token 3) Network
+    pause
+    exit /b 1
+)
+
+echo.
+echo ✅ PUSH SUCCESS!
+echo 🌐 https://project-4rhm6.vercel.app
+echo 📋 Vercel build logs: https://vercel.com/altonsupers-projects/project-4rhm6
 pause
