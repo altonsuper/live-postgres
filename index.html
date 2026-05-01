@@ -2,90 +2,58 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Live App</title>
+  <title>Auth Test</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:1rem; max-width:800px; margin:0 auto; }
-    .card { background:#1a1a2e; padding:1rem; margin:0.5rem 0; border-left:3px solid #00ff9d; }
-    button { padding:0.5rem 1rem; margin:0.25rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; cursor:pointer; }
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; }
+    button { padding:1rem 2rem; margin:0.5rem; font-size:1.1rem; cursor:pointer; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; }
     button:hover { background:#00ff9d; color:#0a0a0f; }
-    input { padding:0.5rem; background:#0a0a0f; border:1px solid #00ff9d; color:#00ff9d; margin:0.25rem 0; }
-    .hidden { display:none; }
+    #log { margin-top:2rem; padding:1rem; background:#1a1a2e; border-left:4px solid #00ff9d; min-height:100px; }
   </style>
 </head>
 <body>
-  <h1>🚀 PostgreSQL + Auth + Storage</h1>
-  
-  <!-- Auth -->
-  <div class="card">
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="signup">Sign Up</button>
-    <button id="login">Log In</button>
-    <button id="google">🔵 Google</button>
-    <button id="github">🐙 GitHub</button>
-    <button id="logout" class="hidden">Log Out</button>
-    <div id="user" class="hidden">👤 <span id="user-email"></span></div>
-  </div>
-
-  <!-- Messages (auth required) -->
-  <div id="msg-section" class="card hidden">
-    <form id="msg-form">
-      <input id="msg" placeholder="Type..." required>
-      <button type="submit">Send</button>
-    </form>
-    <div id="messages"></div>
-  </div>
-
-  <!-- Storage (auth required) -->
-  <div id="storage-section" class="card hidden">
-    <input type="file" id="file" accept="image/*">
-    <button id="upload">Upload</button>
-    <div id="uploads"></div>
-  </div>
+  <h1>🔐 Auth Test</h1>
+  <button id="google">🔵 Google Login</button>
+  <button id="github">🐙 GitHub Login</button>
+  <div id="log">Click a button...</div>
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
-    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
     
-    const $ = id => document.getElementById(id)
-    const userEl = $('user'), emailEl = $('user-email'), logoutBtn = $('logout')
-    const msgSec = $('msg-section'), storageSec = $('storage-section')
+    const log = document.getElementById('log')
+    log.textContent = '✅ Supabase client loaded'
     
-    // Auth state
-    const {  { session } } = await supabase.auth.getSession()
-    handleAuth(session?.user)
-    supabase.auth.onAuthStateChange((_, s) => handleAuth(s?.user))
+    const supabase = createClient(
+      'https://zmtudgbebtnoiysebeli.supabase.co',
+      'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    )
     
-    function handleAuth(user) {
-      if (user) {
-        userEl.classList.remove('hidden'); emailEl.textContent = user.email
-        logoutBtn.classList.remove('hidden'); msgSec.classList.remove('hidden'); storageSec.classList.remove('hidden')
-        $('signup').classList.add('hidden'); $('login').classList.add('hidden')
-        $('email').classList.add('hidden'); $('password').classList.add('hidden')
-        loadMessages(); loadUploads()
-      } else {
-        userEl.classList.add('hidden'); logoutBtn.classList.add('hidden')
-        msgSec.classList.add('hidden'); storageSec.classList.add('hidden')
-        $('signup').classList.remove('hidden'); $('login').classList.remove('hidden')
-        $('email').classList.remove('hidden'); $('password').classList.remove('hidden')
+    document.getElementById('google').onclick = async () => {
+      log.textContent = '🔄 Redirecting to Google...'
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({ 
+          provider: 'google',
+          options: { redirectTo: window.location.origin }
+        })
+        if (error) log.textContent = '❌ ' + error.message
+      } catch (e) {
+        log.textContent = '❌ ' + e.message
       }
     }
     
-    // Auth actions
-    $('signup').onclick = async () => { const { error } = await supabase.auth.signUp({ email: $('email').value, password: $('password').value }); if (error) alert(error.message) }
-    $('login').onclick = async () => { const { error } = await supabase.auth.signInWithPassword({ email: $('email').value, password: $('password').value }); if (error) alert(error.message) }
-    $('google').onclick = async () => { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin } }) }
-    $('github').onclick = async () => { await supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: location.origin } }) }
-    logoutBtn.onclick = async () => { await supabase.auth.signOut(); location.reload() }
+    document.getElementById('github').onclick = async () => {
+      log.textContent = '🔄 Redirecting to GitHub...'
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({ 
+          provider: 'github',
+          options: { redirectTo: window.location.origin }
+        })
+        if (error) log.textContent = '❌ ' + error.message
+      } catch (e) {
+        log.textContent = '❌ ' + e.message
+      }
+    }
     
-    // Messages
-    async function loadMessages() { const {  } = await supabase.from('messages').select('*').order('created_at', { ascending: false }); $('messages').innerHTML = data.map(m => `<div class="card">${m.content}<br><small>${new Date(m.created_at).toLocaleTimeString()}</small></div>`).join('') || '<em>None</em>' }
-    $('msg-form').onsubmit = async (e) => { e.preventDefault(); const {  { user } } = await supabase.auth.getUser(); await supabase.from('messages').insert({ content: $('msg').value, user_email: user?.email }); $('msg').value = '' }
-    supabase.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => { const el = document.createElement('div'); el.className='card'; el.innerHTML = `${p.new.content}<br><small>${new Date(p.new.created_at).toLocaleTimeString()}</small>`; $('messages').prepend(el) }).subscribe()
-    
-    // Storage
-    async function loadUploads() { const {  } = await supabase.storage.from('uploads').list('public', { limit: 5 }); $('uploads').innerHTML = (await Promise.all(data.map(async f => { const {  { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(`public/${f.name}`); return `<div class="card"><img src="${publicUrl}" style="max-width:100%"><br><small>${f.name}</small></div>` }))).join('') || '<em>None</em>' }
-    $('upload').onclick = async () => { const file = $('file').files[0]; if (!file) return; const {  { user } } = await supabase.auth.getUser(); const { error } = await supabase.storage.from('uploads').upload(`public/${user?.id}/${Date.now()}-${file.name}`, file); if (error) alert(error.message); else { loadUploads(); $('file').value = '' } }
+    console.log('✅ Auth test loaded')
   </script>
 </body>
 </html>
