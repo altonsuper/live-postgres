@@ -1,0 +1,1 @@
+git add *.html vercel.json links.md && git commit -m "feat: update all HTML pages + vercel config" && .\push.bat
