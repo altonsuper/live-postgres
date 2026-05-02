@@ -1,31 +1,22 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "**/*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "**/*.{css,js,png,jpg,jpeg,webp,svg,gif,mp4,webm,mp3,wav,pdf,txt,csv,ico}",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "outputDirectory": ".",
-  "github": {
-    "silent": true
-  },
+  "cleanUrls": true,
   "headers": [
     {
-      "source": "/(index\\.html|upload\\.html|gallery\\.html|private\\.html|admin-ready\\.html|dashboard\\.html)",
+      "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/gallery.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=60" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/google85ac2907ae354619.html", "destination": "/google85ac2907ae354619.html" }
   ]
 }
