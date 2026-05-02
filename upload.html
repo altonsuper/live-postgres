@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>📤 Upload Media</title>
+  <style>
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:900px; margin:0 auto; }
+    .card { background:#1a1a2e; padding:1.5rem; margin:1rem 0; border-left:3px solid #00ff9d; border-radius:6px; }
+    input, select, textarea { width:100%; padding:0.8rem; margin:0.3rem 0; background:#0a0a0f; border:1px solid #00ff9d; color:#00ff9d; border-radius:4px; }
+    button { padding:0.8rem 1.5rem; margin:0.3rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; cursor:pointer; font-weight:bold; border-radius:4px; }
+    button:hover { background:#00ff9d; color:#0a0a0f; }
+    .dropzone { border:2px dashed #00ff9d; padding:2rem; text-align:center; margin:1rem 0; border-radius:6px; cursor:pointer; transition:all 0.3s; }
+    .dropzone:hover, .dropzone.dragover { background:#1a1a2e; border-color:#00ffff; }
+    .preview { max-width:200px; max-height:200px; margin:0.5rem; border-radius:4px; }
+    .hidden { display:none; }
+    small { color:#888; }
+    #status { margin:1rem 0; padding:1rem; background:#0a0a0f; border-radius:4px; min-height:50px; }
+    a { color:#00ff9d; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1>📤 Upload Media</h1>
+    <div>
+      <a href="gallery.html" class="btn" style="padding:0.5rem 1rem; border:1px solid #00ff9d">🖼️ Gallery</a>
+      <a href="index.html" class="btn" style="padding:0.5rem 1rem; border:1px solid #00ff9d">← Home</a>
+    </div>
+  </nav>
+
+  <!-- Auth Check -->
+  <div id="auth-check" class="card">🔐 Checking authentication...</div>
+
+  <!-- Upload Form (hidden until logged in) -->
+  <div id="upload-form" class="hidden">
+    <!-- Drag & Drop Zone -->
+    <div class="card">
+      <h3>📥 Drag & Drop Files</h3>
+      <div id="dropzone" class="dropzone">
+        <p>📁 Drop files here or click to browse</p>
+        <small>Supports: Images (jpg, png, webp), Audio (mp3, wav), Video (mp4, webm), Documents (pdf, csv)</small>
+      </div>
+      <input type="file" id="file-input" multiple style="display:none" accept="image/*,audio/*,video/*,.pdf,.csv,.txt">
+      
+      <!-- File Preview -->
+      <div id="file-preview" style="margin:1rem 0"></div>
+      
+      <!-- Tags Input -->
+      <input type="text" id="tags" placeholder="Tags (comma-separated: logo, banner, 2024)">
+      
+      <!-- Metadata (JSON) -->
+      <textarea id="metadata" placeholder='Metadata (JSON, optional): {"project":"website","client":"acme"}' rows="3"></textarea>
+      
+      <!-- Upload Button -->
+      <button onclick="uploadFiles()">⬆️ Upload All Files</button>
+      <button onclick="clearFiles()" style="border-color:#ff6b6b; color:#ff6b6b">🗑️ Clear</button>
+    </div>
+
+    <!-- CSV Import -->
+    <div class="card">
+      <h3>📊 Import from CSV</h3>
+      <small>Paste CSV data (format: file_url,file_name,file_size,mime_type,tag1;tag2;tag3)</small>
+      <textarea id="csv-data" placeholder="https://...,image.jpg,1024,image/png,logo;banner" rows="5"></textarea>
+      <select id="csv-table">
+        <option value="images">Import to: Images</option>
+        <option value="audio">Import to: Audio</option>
+        <option value="videos">Import to: Videos</option>
+        <option value="documents">Import to: Documents</option>
+      </select>
+      <button onclick="importCSV()">📥 Import CSV</button>
+    </div>
+
+    <!-- Status -->
+    <div id="status"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+
+    let selectedFiles = []
+
+    // Auth Check
+    const {  { session } } = await supabase.auth.getSession()
+    if (!session) {
+      document.getElementById('auth-check').innerHTML = '❌ Please <a href="index.html">log in</a> first'
+    } else {
+      document.getElementById('auth-check').classList.add('hidden')
+      document.getElementById('upload-form').classList.remove('hidden')
+    }
+
+    // Drag & Drop
+    const dropzone = document.getElementById('dropzone')
+    const fileInput = document.getElementById('file-input')
+
+    dropzone.onclick = () => fileInput.click()
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover') }
+    dropzone.ondragleave = () => dropzone.classList.remove('dragover')
+    dropzone.ondrop = (e) => {
+      e.preventDefault()
+      dropzone.classList.remove('dragover')
+      handleFiles(e.dataTransfer.files)
+    }
+    fileInput.onchange = () => handleFiles(fileInput.files)
+
+    function handleFiles(files) {
+      selectedFiles = [...selectedFiles, ...Array.from(files)]
+      updatePreview()
+    }
+
+    function updatePreview() {
+      const preview = document.getElementById('file-preview')
+      preview.innerHTML = selectedFiles.map((f, i) => `
+        <div style="display:inline-block; margin:0.5rem; text-align:center">
+          ${f.type.startsWith('image/') ? `<img src="${URL.createObjectURL(f)}" class="preview">` : '📄'}
+          <div style="font-size:0.8rem">${f.name}<br>(${(f.size/1024).toFixed(1)} KB)</div>
+          <button onclick="removeFile(${i})" style="font-size:0.7rem; padding:0.2rem 0.5rem">✕</button>
+        </div>
+      `).join('')
+    }
+
+    window.removeFile = (index) => {
+      selectedFiles.splice(index, 1)
+      updatePreview()
+    }
+
+    window.clearFiles = () => {
+      selectedFiles = []
+      updatePreview()
+      document.getElementById('status').innerHTML = ''
+    }
+
+    // Upload Files
+    window.uploadFiles = async () => {
+      if (selectedFiles.length === 0) return alert('❌ Select files first')
+      
+      const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t)
+      let metadata = {}
+      try {
+        const metaText = document.getElementById('metadata').value.trim()
+        if (metaText) metadata = JSON.parse(metaText)
+      } catch(e) {
+        return alert('❌ Invalid JSON in metadata field')
+      }
+      
+      const status = document.getElementById('status')
+      status.innerHTML = `⬆️ Uploading ${selectedFiles.length} file(s)...`
+      
+      const user = (await supabase.auth.getUser()).data.user
+      let success = 0, failed = 0
+      
+      for (const file of selectedFiles) {
+        try {
+          // Determine table based on mime type
+          let table = 'documents'
+          if (file.type.startsWith('image/')) table = 'images'
+          else if (file.type.startsWith('audio/')) table = 'audio'
+          else if (file.type.startsWith('video/')) table = 'videos'
+          
+          // Upload to storage
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+          const { error: uploadError, data } = await supabase.storage.from('uploads').upload(fileName, file)
+          
+          if (uploadError) throw uploadError
+          
+          // Get public URL
+          const {  } = supabase.storage.from('uploads').getPublicUrl(fileName)
+          
+          // Insert metadata into appropriate table
+          const insertData = {
+            user_email: user.email,
+            file_url: data.publicUrl,
+            file_name: file.name,
+            file_size: file.size,
+            mime_type: file.type,
+            tags: tags,
+            metadata: metadata
+          }
+          
+          // Add type-specific fields
+          if (table === 'images') {
+            // Could extract width/height here with additional processing
+          } else if (table === 'videos' || table === 'audio') {
+            // Could extract duration here
+          }
+          
+          const { error: dbError } = await supabase.from(table).insert(insertData)
+          if (dbError) throw dbError
+          
+          success++
+        } catch (err) {
+          console.error('Upload error:', err)
+          failed++
+        }
+      }
+      
+      status.innerHTML = `✅ Uploaded: ${success} | Failed: ${failed}`
+      if (success > 0) {
+        setTimeout(() => window.location.href = 'gallery.html', 1500)
+      }
+    }
+
+    // Import CSV
+    window.importCSV = async () => {
+      const csvData = document.getElementById('csv-data').value.trim()
+      const tableName = document.getElementById('csv-table').value
+      
+      if (!csvData) return alert('❌ Paste CSV data first')
+      
+      const status = document.getElementById('status')
+      status.innerHTML = '📥 Importing CSV...'
+      
+      const user = (await supabase.auth.getUser()).data.user
+      const lines = csvData.split('\n').filter(l => l.trim())
+      let imported = 0
+      
+      for (const line of lines) {
+        try {
+          const parts = line.split(',').map(p => p.trim())
+          const [file_url, file_name, file_size, mime_type, tags_str] = parts
+          
+          const { error } = await supabase.from(tableName).insert({
+            user_email: user.email,
+            file_url,
+            file_name,
+            file_size: parseInt(file_size) || null,
+            mime_type,
+            tags: tags_str ? tags_str.split(';') : []
+          })
+          
+          if (error) throw error
+          imported++
+        } catch (err) {
+          console.error('CSV import error:', err)
+        }
+      }
+      
+      status.innerHTML = `✅ Imported ${imported} rows from CSV`
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>🖼️ Media Gallery</title>
+  <style>
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:1200px; margin:0 auto; }
+    .card { background:#1a1a2e; padding:1rem; margin:0.5rem; border-left:3px solid #00ff9d; border-radius:6px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:1rem; }
+    .item { background:#0a0a0f; padding:0.5rem; border-radius:4px; position:relative; }
+    .item img { width:100%; height:150px; object-fit:cover; border-radius:4px; }
+    .item video { width:100%; max-height:200px; border-radius:4px; }
+    input, select { padding:0.5rem; margin:0.3rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; border-radius:4px; }
+    button { padding:0.5rem 1rem; margin:0.3rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; cursor:pointer; border-radius:4px; }
+    button:hover { background:#00ff9d; color:#0a0a0f; }
+    .tabs { display:flex; gap:0.5rem; margin:1rem 0; }
+    .tab { padding:0.5rem 1rem; border:1px solid #00ff9d; cursor:pointer; border-radius:4px; }
+    .tab.active { background:#00ff9d; color:#0a0a0f; }
+    small { color:#888; }
+    a { color:#00ff9d; text-decoration:none; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1>🖼️ Media Gallery</h1>
+    <div>
+      <a href="upload.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">📤 Upload</a>
+      <a href="index.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">← Home</a>
+    </div>
+  </nav>
+
+  <!-- Search & Filter -->
+  <div class="card">
+    <input type="text" id="search" placeholder="🔍 Search by filename or tag..." oninput="loadGallery()">
+    <select id="filter-type" onchange="loadGallery()">
+      <option value="all">All Types</option>
+      <option value="images">Images Only</option>
+      <option value="audio">Audio Only</option>
+      <option value="videos">Videos Only</option>
+      <option value="documents">Documents Only</option>
+    </select>
+    <input type="text" id="filter-tag" placeholder="Filter by tag..." oninput="loadGallery()">
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('grid'); this.classList.add('active')">⊞ Grid</div>
+    <div class="tab" onclick="switchTab('list'); this.classList.add('active')">☰ List</div>
+    <div class="tab" onclick="switchTab('stats'); this.classList.add('active')">📊 Stats</div>
+  </div>
+
+  <!-- Gallery Grid -->
+  <div id="gallery-grid" class="grid"></div>
+  
+  <!-- Gallery List -->
+  <div id="gallery-list" class="hidden"></div>
+  
+  <!-- Stats -->
+  <div id="gallery-stats" class="hidden card">
+    <h3>📊 Statistics</h3>
+    <div id="stats-content"></div>
+  </div>
+
+  <div id="loading" style="text-align:center; padding:2rem">🔄 Loading...</div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+
+    let currentView = 'grid'
+    let allMedia = { images: [], audio: [], videos: [], documents: [] }
+
+    // Auth Check
+    const {  { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = 'index.html'; }
+
+    // Load Gallery
+    async function loadGallery() {
+      const search = document.getElementById('search').value.toLowerCase()
+      const filterType = document.getElementById('filter-type').value
+      const filterTag = document.getElementById('filter-tag').value.toLowerCase()
+      
+      document.getElementById('loading').classList.remove('hidden')
+      
+      // Fetch from all tables
+      const tables = ['images', 'audio', 'videos', 'documents']
+      allMedia = {}
+      
+      for (const table of tables) {
+        let query = supabase.from(table).select('*').eq('user_email', session.user.email).order('created_at', { ascending: false })
+        
+        if (filterType !== 'all' && table !== filterType) continue
+        
+        const {  } = await query
+        allMedia[table] = data || []
+      }
+      
+      // Filter & Search
+      let filtered = []
+      for (const [type, items] of Object.entries(allMedia)) {
+        for (const item of items) {
+          const matchesSearch = !search || item.file_name.toLowerCase().includes(search) || (item.tags && item.tags.some(t => t.toLowerCase().includes(search)))
+          const matchesTag = !filterTag || (item.tags && item.tags.some(t => t.toLowerCase().includes(filterTag)))
+          
+          if (matchesSearch && matchesTag) {
+            filtered.push({ ...item, type })
+          }
+        }
+      }
+      
+      renderGallery(filtered)
+      document.getElementById('loading').classList.add('hidden')
+    }
+
+    function renderGallery(items) {
+      const grid = document.getElementById('gallery-grid')
+      const list = document.getElementById('gallery-list')
+      
+      if (items.length === 0) {
+        grid.innerHTML = list.innerHTML = '<div class="card" style="grid-column:1/-1; text-align:center">📭 No media found. <a href="upload.html">Upload something!</a></div>'
+        return
+      }
+      
+      // Grid View
+      grid.innerHTML = items.map(item => `
+        <div class="item">
+          ${renderPreview(item)}
+          <div style="padding:0.5rem">
+            <div style="font-weight:bold; font-size:0.9rem">${item.file_name}</div>
+            <small>${item.type} • ${(item.file_size/1024).toFixed(1)} KB</small><br>
+            ${item.tags ? item.tags.map(t => `<span style="background:#1a1a2e; padding:0.1rem 0.3rem; margin:0.1rem; border-radius:2px; font-size:0.7rem">#${t}</span>`).join('') : ''}
+            <div style="margin-top:0.5rem">
+              <button onclick="copyUrl('${item.file_url}')" style="font-size:0.7rem">🔗 Copy</button>
+              <button onclick="deleteItem('${item.type}', '${item.id}')" style="font-size:0.7rem; border-color:#ff6b6b; color:#ff6b6b">🗑️ Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('')
+      
+      // List View
+      list.innerHTML = `<div class="card">${items.map(item => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem; border-bottom:1px solid #1a1a2e">
+          <div style="flex:1">
+            <div style="font-weight:bold">${item.file_name}</div>
+            <small>${item.type} • ${(item.file_size/1024).toFixed(1)} KB • ${new Date(item.created_at).toLocaleDateString()}</small>
+          </div>
+          <div>
+            <button onclick="copyUrl('${item.file_url}')" style="font-size:0.7rem">🔗 Copy</button>
+            <button onclick="deleteItem('${item.type}', '${item.id}')" style="font-size:0.7rem; border-color:#ff6b6b; color:#ff6b6b">🗑️</button>
+          </div>
+        </div>
+      `).join('')}</div>`
+      
+      // Stats
+      updateStats()
+    }
+
+    function renderPreview(item) {
+      if (item.type === 'images' && item.mime_type?.startsWith('image/')) {
+        return `<img src="${item.file_url}" alt="${item.file_name}">`
+      } else if (item.type === 'videos' && item.mime_type?.startsWith('video/')) {
+        return `<video src="${item.file_url}" controls></video>`
+      } else if (item.type === 'audio' && item.mime_type?.startsWith('audio/')) {
+        return `<audio src="${item.file_url}" controls style="width:100%"></audio>`
+      } else {
+        return `<div style="height:150px; display:flex; align-items:center; justify-content:center; background:#1a1a2e; border-radius:4px">📄 ${item.file_name.split('.').pop().toUpperCase()}</div>`
+      }
+    }
+
+    function updateStats() {
+      const total = Object.values(allMedia).flat().length
+      const totalSize = Object.values(allMedia).flat().reduce((sum, item) => sum + (item.file_size || 0), 0)
+      
+      document.getElementById('stats-content').innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1rem 0">
+          <div class="card"><div style="font-size:2rem; font-weight:bold">${total}</div><small>Total Files</small></div>
+          <div class="card"><div style="font-size:2rem; font-weight:bold">${(totalSize/1024/1024).toFixed(2)} MB</div><small>Total Size</small></div>
+          <div class="card"><div style="font-size:2rem; font-weight:bold">${allMedia.images?.length || 0}</div><small>Images</small></div>
+          <div class="card"><div style="font-size:2rem; font-weight:bold">${allMedia.videos?.length || 0}</div><small>Videos</small></div>
+        </div>
+      `
+    }
+
+    window.switchTab = (view) => {
+      currentView = view
+      document.getElementById('gallery-grid').classList.toggle('hidden', view !== 'grid')
+      document.getElementById('gallery-list').classList.toggle('hidden', view !== 'list')
+      document.getElementById('gallery-stats').classList.toggle('hidden', view !== 'stats')
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+      event.target.classList.add('active')
+    }
+
+    window.copyUrl = (url) => {
+      navigator.clipboard.writeText(url)
+      alert('✅ URL copied: ' + url)
+    }
+
+    window.deleteItem = async (table, id) => {
+      if (!confirm('🗑️ Delete this item?')) return
+      
+      const { error } = await supabase.from(table).delete().eq('id', id).eq('user_email', session.user.email)
+      if (error) alert('❌ ' + error.message)
+      else loadGallery()
+    }
+
+    //

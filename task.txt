@@ -1,0 +1,9 @@
+✅ Full-stack SaaS foundation: Static HTML + Supabase + Vercel
+✅ Auth system: Email + Google + GitHub OAuth (wired, just needs final config)
+✅ Database: PostgreSQL with RLS + realtime messages
+✅ Storage: File uploads with user-scoped buckets
+✅ AI bridge: Local Qwen + Supabase + 2s timeout + graceful fallback
+✅ CLI automation: help.bat with 9 atomic commands (deploy, test, patch, etc.)
+✅ Security: .gitignore blocking secrets, anon key safe, RLS enforced
+✅ Dashboard: Auth-guarded user stats + activity feed
+✅ Golden workflow: Edit → .\push.bat → Live in ~15s
