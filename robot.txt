@@ -1,0 +1,8 @@
+# C:\Ag\db\robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://project-4rhm6.vercel.app/sitemap.xml
+
+# Block admin pages from public indexing (optional)
+Disallow: /private.html
+Disallow: /admin-ready.html
