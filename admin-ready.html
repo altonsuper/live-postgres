@@ -1,60 +1,409 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="utf-8">
-  <title>👑 Admin Ready</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👑 MCALTONZ 2026 // Command Center</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:700px; margin:0 auto; text-align:center; }
-    .card { background:#1a1a2e; padding:1.5rem; margin:1rem 0; border-left:3px solid #00ff9d; border-radius:6px; text-align:left; }
-    .btn { display:inline-block; padding:1rem 2rem; margin:0.5rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; text-decoration:none; font-weight:bold; border-radius:4px; }
-    .btn:hover { background:#00ff9d; color:#0a0a0f; }
-    .status { font-size:1.2rem; margin:1rem 0; }
-    .key-display { background:#0a0a0f; padding:0.5rem; border-radius:4px; font-family:monospace; margin:0.5rem 0; }
-    small { color:#888; }
+    /* 🌍 GLOBAL DESIGN SYSTEM (Sync) */
+    :root {
+      --bg-deep: #040508; --bg-mid: #080a12;
+      --accent-cyan: #00f3ff; --accent-violet: #7000ff; --accent-pink: #ff2a6d;
+      --accent-orange: #ff9f43; --accent-green: #00ff9d;
+      --glass-bg: rgba(255,255,255,0.04); --glass-border: rgba(255,255,255,0.1);
+      --text-primary: #e8f0ff; --text-secondary: #8a9ab0;
+      --radius-lg: 16px; --radius-md: 10px; --radius-sm: 6px;
+      --font-main: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+      --transition-smooth: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep); color: var(--text-primary);
+      font-family: var(--font-main); overflow-x: hidden; min-height: 100vh;
+      padding-top: 68px; position: relative;
+    }
+
+    /* 🌐 DEPTH BG */
+    .depth-bg {
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(circle at 85% 15%, rgba(255,159,67,0.12) 0%, transparent 45%),
+                  radial-gradient(circle at 15% 85%, rgba(0,243,255,0.08) 0%, transparent 45%),
+                  var(--bg-deep);
+    }
+
+    /* 🖥️ NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.9rem 2rem; background: rgba(8,10,18,0.85);
+      backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border);
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.25rem; font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--accent-orange), var(--accent-cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .nav-link {
+      padding: 0.45rem 0.8rem; border-radius: var(--radius-md);
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;
+      transition: var(--transition-smooth);
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-primary); border-color: var(--accent-orange);
+      box-shadow: 0 0 12px rgba(255,159,67,0.2);
+    }
+
+    /* 👑 ADMIN LAYOUT */
+    .admin-container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .admin-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .admin-title { font-size: 1.8rem; font-weight: 700; }
+    .admin-status {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.8rem; background: rgba(0,255,157,0.1);
+      border: 1px solid rgba(0,255,157,0.3); border-radius: 50px;
+      font-size: 0.85rem; color: var(--accent-green);
+    }
+    .pulse-dot { width: 8px; height: 8px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+    /* 📊 STATS ROW */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 1.2rem; position: relative;
+      overflow: hidden; transition: var(--transition-smooth);
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+    .stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; font-family: var(--font-mono); }
+    .stat-badge {
+      position: absolute; top: 1rem; right: 1rem; padding: 0.2rem 0.5rem;
+      font-size: 0.75rem; border-radius: var(--radius-sm); font-weight: 600;
+    }
+    .badge-green { background: rgba(0,255,157,0.15); color: var(--accent-green); }
+    .badge-orange { background: rgba(255,159,67,0.15); color: var(--accent-orange); }
+
+    /* 📦 WIDGET GRID */
+    .widget-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.2rem;
+    }
+    .widget {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 1.5rem; transition: var(--transition-smooth);
+    }
+    .widget:hover { border-color: rgba(255,255,255,0.2); }
+    .widget-title { font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .widget-content { display: flex; flex-direction: column; gap: 0.8rem; }
+
+    /* 📋 ACTIVITY LOG */
+    .log-item {
+      display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-time { color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.8rem; min-width: 60px; }
+    .log-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+    .icon-success { background: rgba(0,255,157,0.15); color: var(--accent-green); }
+    .icon-warn { background: rgba(255,159,67,0.15); color: var(--accent-orange); }
+    .icon-error { background: rgba(255,42,109,0.15); color: var(--accent-pink); }
+
+    /* 🎛️ CONTROLS & TOGGLES */
+    .control-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; }
+    .toggle {
+      width: 40px; height: 22px; background: rgba(255,255,255,0.1);
+      border-radius: 50px; position: relative; cursor: pointer; transition: background 0.3s;
+    }
+    .toggle::after {
+      content: ""; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px;
+      background: var(--text-secondary); border-radius: 50%; transition: transform 0.3s;
+    }
+    .toggle.active { background: rgba(0,243,255,0.3); }
+    .toggle.active::after { transform: translateX(18px); background: var(--accent-cyan); }
+
+    /* 🛠️ BULK ACTIONS */
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .action-btn {
+      padding: 0.7rem; background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.9rem;
+      cursor: pointer; transition: var(--transition-smooth); text-align: center;
+    }
+    .action-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--accent-cyan); }
+    .action-btn.danger:hover { border-color: var(--accent-pink); background: rgba(255,42,109,0.1); }
+
+    /* 🔄 PROGRESS BAR */
+    .progress-track { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-orange)); width: 0%; transition: width 0.5s ease; border-radius: 3px; }
+
+    /* 💬 TOAST & MODAL */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--bg-mid); border: 1px solid var(--glass-border);
+      padding: 0.8rem 1.2rem; border-radius: var(--radius-md); z-index: 999;
+      display: flex; align-items: center; gap: 0.5rem; transition: transform 0.3s ease;
+    }
+    .toast.visible { transform: translateX(-50%) translateY(0); }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex;
+      align-items: center; justify-content: center; z-index: 998; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+    .modal { background: var(--bg-mid); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 1.5rem; max-width: 400px; width: 90%; text-align: center; }
+    .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+
+    /* 📱 RESPONSIVE */
+    @media (max-width: 640px) {
+      .nav { padding: 0.8rem 1rem; flex-wrap: wrap; }
+      .nav-links { width: 100%; justify-content: center; margin-top: 0.5rem; }
+      .widget-grid { grid-template-columns: 1fr; }
+      .action-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; transform: none !important; }
+    }
   </style>
 </head>
 <body>
-  <h1>👑 Admin Ready</h1>
-  <p class="status">✅ You have admin access</p>
+  <div class="depth-bg"></div>
+
+  <nav class="nav">
+    <div class="logo">MCALTONZ 2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="private.html" class="nav-link">Private</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="admin-ready.html" class="nav-link active">Admin</a>
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+    </div>
+  </nav>
+
+  <main class="admin-container">
+    <div class="admin-header">
+      <h1 class="admin-title">👑 Command Center</h1>
+      <div class="admin-status"><span class="pulse-dot"></span> System Operational</div>
+    </div>
+
+    <!-- 📊 QUICK STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Active Users</div>
+        <div class="stat-value" id="stat-users">0</div>
+        <span class="stat-badge badge-green">+12% today</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Storage Used</div>
+        <div class="stat-value" id="stat-storage">0%</div>
+        <div class="progress-track" style="margin-top:0.5rem"><div class="progress-fill" id="prog-storage"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">API Requests</div>
+        <div class="stat-value" id="stat-api">0</div>
+        <span class="stat-badge badge-orange">Rate limit 80%</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Tasks</div>
+        <div class="stat-value" id="stat-tasks">0</div>
+        <span class="stat-badge badge-green">Auto-clean enabled</span>
+      </div>
+    </div>
+
+    <!-- 📦 WIDGETS -->
+    <div class="widget-grid">
+      <!-- 📋 Activity Feed -->
+      <section class="widget">
+        <div class="widget-title">📋 Recent System Logs</div>
+        <div class="widget-content" id="activity-log">
+          <!-- ⚠️ DON'T TOUCH: Injected via Supabase or mock -->
+          <div class="log-item"><span class="log-time">09:14</span><div class="log-icon icon-success">✓</div><span>DB Backup completed</span></div>
+          <div class="log-item"><span class="log-time">08:32</span><div class="log-icon icon-warn">⚠</div><span>Storage threshold 75% reached</span></div>
+          <div class="log-item"><span class="log-time">07:10</span><div class="log-icon icon-success">✓</span><span>User session sync</span></div>
+        </div>
+      </section>
+
+      <!-- 🎛️ Toggles & Config -->
+      <section class="widget">
+        <div class="widget-title">🎛️ Quick Configuration</div>
+        <div class="widget-content">
+          <div class="control-row"><span>Enable RLS Enforcement</span><div class="toggle active" data-toggle="rls"></div></div>
+          <div class="control-row"><span>Auto-Archive (>6mo)</span><div class="toggle active" data-toggle="archive"></div></div>
+          <div class="control-row"><span>AI Tagging Engine</span><div class="toggle" data-toggle="ai"></div></div>
+          <div class="control-row"><span>Public Gallery View</span><div class="toggle" data-toggle="public"></div></div>
+        </div>
+      </section>
+
+      <!-- 🛠️ Bulk Actions -->
+      <section class="widget">
+        <div class="widget-title">🛠️ Maintenance & Bulk Actions</div>
+        <div class="widget-content">
+          <div class="action-grid">
+            <button class="action-btn" data-action="cache">🧹 Clear Cache</button>
+            <button class="action-btn" data-action="sync">🔄 Force Sync</button>
+            <button class="action-btn" data-action="export">📥 Export Logs</button>
+            <button class="action-btn danger" data-action="purge">🗑️ Purge Temp</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 👤 Admin Shortcuts -->
+      <section class="widget">
+        <div class="widget-title">🚀 Quick Links</div>
+        <div class="widget-content">
+          <a href="private.html" class="action-btn" style="text-align:left; text-decoration:none;">🔐 Reset Admin Key</a>
+          <a href="upload.html?admin=true" class="action-btn" style="text-align:left; text-decoration:none;">📤 Manual Upload</a>
+          <a href="gallery.html?admin=true" class="action-btn" style="text-align:left; text-decoration:none;">🖼️ View All Media</a>
+          <button class="action-btn danger" id="btn-logout" style="text-align:left; border-color:rgba(255,42,109,0.3);">🚪 Secure Logout</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 💬 TOAST -->
+  <div class="toast" id="toast">✅ Action completed</div>
   
-  <div class="card">
-    <h3>🔑 Your Admin Key</h3>
-    <div class="key-display">secret2026qwen</div>
-    <small>Keep this secret. Use in: <code>?key=secret2026qwen</code></small>
+  <!-- ⚠️ MODAL -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal">
+      <h3 id="modal-title">Confirm Action</h3>
+      <p id="modal-desc" style="color:var(--text-secondary); margin:0.5rem 0 1rem;">This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="action-btn" id="modal-cancel" style="border-color:var(--text-secondary)">Cancel</button>
+        <button class="action-btn danger" id="modal-confirm">Confirm</button>
+      </div>
+    </div>
   </div>
-  
-  <div class="card">
-    <h3>🚀 Quick Actions</h3>
-    <a href="upload.html?admin=true" class="btn">📤 Upload Media</a>
-    <a href="gallery.html?admin=true" class="btn">🖼️ View All Media</a>
-    <a href="index.html" class="btn">← Public Site</a>
-  </div>
-  
-  <div class="card">
-    <h3>💡 Tips</h3>
-    <ul style="text-align:left; margin:0.5rem 0 0 1.5rem">
-      <li>Normal users must log in via <code>index.html</code></li>
-      <li>Admin bypass: <code>private.html?key=secret2026qwen</code></li>
-      <li>Direct access: Add <code>?admin=true</code> to upload/gallery URLs</li>
-      <li>Admin sees ALL files; users see only their own (RLS)</li>
-    </ul>
-  </div>
-  
-  <p style="margin-top:2rem">
-    <small>Built with Supabase + Vercel + Local AI</small><br>
-    <small>Deployed: <span id="deploy-time"></span></small>
-  </p>
 
   <script>
-    // Show deploy time
-    document.getElementById('deploy-time').textContent = new Date().toLocaleString()
-    
-    // Verify admin key in URL
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('key') !== 'secret2026qwen') {
-      // Redirect to private.html if accessed directly without key
-      // window.location.href = 'private.html'
+    // 🔐 SUPABASE CONFIG (Same as other pages)
+    const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // DOM Elements
+    const toast = document.getElementById('toast')
+    const modal = document.getElementById('confirm-modal')
+    const modalTitle = document.getElementById('modal-title')
+    const modalDesc = document.getElementById('modal-desc')
+    const modalCancel = document.getElementById('modal-cancel')
+    const modalConfirm = document.getElementById('modal-confirm')
+    let pendingAction = null
+
+    // 🌐 INIT
+    document.addEventListener('DOMContentLoaded', async () => {
+      initAdminUI()
+      await loadAdminStats()
+    })
+
+    // ✅ SAFE: UI Engine
+    function initAdminUI() {
+      // Toggle Switches
+      document.querySelectorAll('.toggle').forEach(t => {
+        t.addEventListener('click', () => {
+          t.classList.toggle('active')
+          showToast(`⚙️ ${t.dataset.toggle} ${t.classList.contains('active') ? 'Enabled' : 'Disabled'}`)
+          // ⚠️ SUPABASE INTEGRATION POINT: Update feature flags in DB
+          // supabase.from('config').update({ value: t.classList.contains('active') }).eq('key', t.dataset.toggle)
+        })
+      })
+
+      // Bulk Actions
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          pendingAction = btn.dataset.action
+          modalTitle.textContent = `Confirm: ${btn.textContent}`
+          modalDesc.textContent = btn.dataset.action === 'purge' 
+            ? "This will permanently delete temporary files. Continue?" 
+            : "This action will run in the background. Proceed?"
+          modal.classList.add('visible')
+        })
+      })
+
+      modalCancel.addEventListener('click', () => modal.classList.remove('visible'))
+      modalConfirm.addEventListener('click', () => {
+        modal.classList.remove('visible')
+        executeBulkAction(pendingAction)
+      })
+
+      // Logout
+      document.getElementById('btn-logout').addEventListener('click', async () => {
+        // ⚠️ SUPABASE INTEGRATION POINT: await supabase.auth.signOut()
+        showToast("👋 Session cleared. Redirecting...")
+        setTimeout(() => window.location.href = 'index.html', 1000)
+      })
     }
+
+    // 📊 MOCK STATS (Replace with Supabase fetch)
+    async function loadAdminStats() {
+      // ⚠️ DON'T TOUCH: Structure for real admin stats
+      /*
+      const {  { users, storage, api, tasks } } = await supabase.rpc('get_admin_stats')
+      document.getElementById('stat-users').textContent = users
+      document.getElementById('stat-storage').textContent = storage + '%'
+      document.getElementById('prog-storage').style.width = storage + '%'
+      document.getElementById('stat-api').textContent = api
+      document.getElementById('stat-tasks').textContent = tasks
+      */
+      
+      // 🎯 UI Animation (Safe)
+      animateValue('stat-users', 142, 1500)
+      animateValue('stat-storage', 68, 1200)
+      setTimeout(() => document.getElementById('prog-storage').style.width = '68%', 300)
+      animateValue('stat-api', 8450, 1400)
+      animateValue('stat-tasks', 3, 800)
+    }
+
+    function animateValue(id, end, duration) {
+      const el = document.getElementById(id)
+      const start = 0, startTime = performance.now()
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1)
+        el.textContent = Math.floor(start + (end - start) * (1 - Math.pow(1 - progress, 3)))
+        if (progress < 1) requestAnimationFrame(step)
+      }
+      requestAnimationFrame(step)
+    }
+
+    // 🛠️ BULK EXECUTION (UI-only simulation)
+    function executeBulkAction(action) {
+      showToast(`⏳ Running ${action}...`)
+      setTimeout(() => {
+        const messages = {
+          cache: "🧹 Cache cleared successfully",
+          sync: "🔄 Data sync completed",
+          export: "📥 Logs exported to CSV",
+          purge: "🗑️ Temporary files purged"
+        }
+        showToast(messages[action] || "✅ Action done")
+        
+        // Add to log UI
+        const log = document.getElementById('activity-log')
+        const now = new Date().toTimeString().slice(0,5)
+        const div = document.createElement('div')
+        div.className = 'log-item'
+        div.innerHTML = `<span class="log-time">${now}</span><div class="log-icon icon-success">✓</div><span>${action.toUpperCase()} executed</span>`
+        log.insertBefore(div, log.firstChild)
+      }, 1200)
+    }
+
+    // 💬 TOAST
+    function showToast(msg) {
+      toast.textContent = msg
+      toast.classList.add('visible')
+      setTimeout(() => toast.classList.remove('visible'), 2500)
+    }
+
+    window.executeBulkAction = executeBulkAction
   </script>
 </body>
 </html>

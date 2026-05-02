@@ -1,241 +1,549 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="utf-8">
-  <title>🖼️ Media Gallery</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🖼️ MCALTONZ 2026 // Gallery</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:1200px; margin:0 auto; }
-    .card { background:#1a1a2e; padding:1rem; margin:0.5rem; border-left:3px solid #00ff9d; border-radius:6px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:1rem; }
-    .item { background:#0a0a0f; padding:0.5rem; border-radius:4px; position:relative; }
-    .item img { width:100%; height:150px; object-fit:cover; border-radius:4px; }
-    .item video { width:100%; max-height:200px; border-radius:4px; }
-    input, select { padding:0.5rem; margin:0.3rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; border-radius:4px; }
-    button { padding:0.5rem 1rem; margin:0.3rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; cursor:pointer; border-radius:4px; }
-    button:hover { background:#00ff9d; color:#0a0a0f; }
-    .tabs { display:flex; gap:0.5rem; margin:1rem 0; }
-    .tab { padding:0.5rem 1rem; border:1px solid #00ff9d; cursor:pointer; border-radius:4px; }
-    .tab.active { background:#00ff9d; color:#0a0a0f; }
-    small { color:#888; }
-    a { color:#00ff9d; text-decoration:none; }
-    .hidden { display:none; }
-    .admin-badge { background:#00ff9d; color:#0a0a0f; padding:0.2rem 0.5rem; border-radius:2px; font-size:0.8rem; font-weight:bold; }
+    /* 🌍 GLOBAL DESIGN SYSTEM */
+    :root {
+      --bg-deep: #040508; --bg-mid: #080a12;
+      --accent-primary: #00ced1; --accent-light: #20b2aa; --accent-dark: #008080;
+      --accent-glow: rgba(0, 206, 209, 0.25);
+      --glass-bg: rgba(255,255,255,0.04); --glass-border: rgba(0, 206, 209, 0.15);
+      --text-primary: #e8f0ff; --text-secondary: #8a9ab0;
+      --radius-lg: 18px; --radius-md: 10px; --radius-sm: 6px;
+      --font-main: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+      --transition-smooth: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep); color: var(--text-primary);
+      font-family: var(--font-main); overflow-x: hidden; min-height: 100vh;
+      padding-top: 68px; position: relative;
+    }
+
+    /* 🌐 DEPTH BG */
+    .depth-bg {
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(circle at 25% 15%, rgba(0,206,209,0.1) 0%, transparent 40%),
+                  radial-gradient(circle at 75% 85%, rgba(32,178,170,0.08) 0%, transparent 40%),
+                  var(--bg-deep);
+    }
+
+    /* 🖥️ NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.9rem 2rem; background: rgba(8,10,18,0.85);
+      backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border);
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.25rem; font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-light));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .nav-link {
+      padding: 0.45rem 0.8rem; border-radius: var(--radius-md);
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;
+      transition: var(--transition-smooth);
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-primary); border-color: var(--accent-primary);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* 📦 GALLERY LAYOUT */
+    .gallery-container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .header-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .search-box {
+      flex: 1; min-width: 200px; position: relative;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: 50px; padding: 0.5rem 1rem;
+    }
+    .search-box input {
+      width: 100%; background: transparent; border: none; outline: none;
+      color: var(--text-primary); font-size: 0.95rem;
+    }
+    .filters { display: flex; gap: 0.5rem; }
+    .filter-btn {
+      padding: 0.4rem 0.8rem; background: var(--glass-bg);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      color: var(--text-secondary); font-size: 0.85rem; cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .filter-btn.active, .filter-btn:hover {
+      color: var(--text-primary); border-color: var(--accent-primary);
+      background: rgba(0,206,209,0.1);
+    }
+
+    /* 🔄 TAB TOGGLE */
+    .tab-toggle {
+      display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); padding: 0.3rem; width: fit-content;
+    }
+    .tab-btn {
+      padding: 0.5rem 1.2rem; background: transparent; border: none;
+      color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;
+      border-radius: var(--radius-sm); transition: var(--transition-smooth);
+    }
+    .tab-btn.active { background: var(--accent-primary); color: #000; font-weight: 600; }
+
+    /* 📐 GRID SYSTEM */
+    .media-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem;
+    }
+    .media-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      transition: var(--transition-smooth); position: relative;
+      cursor: pointer;
+    }
+    .media-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.3); border-color: var(--accent-primary); }
+    .card-thumb {
+      width: 100%; height: 180px; background: #0a0c14;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .card-thumb img, .card-thumb video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .media-card:hover .card-thumb img { transform: scale(1.05); }
+    .badge {
+      position: absolute; top: 0.6rem; right: 0.6rem;
+      padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); border-radius: var(--radius-sm);
+      font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
+    }
+    .card-info { padding: 0.8rem; }
+    .card-title { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.3rem; }
+    .card-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); }
+    .card-actions { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+    .action-btn {
+      flex: 1; padding: 0.4rem; background: rgba(0,206,209,0.1);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      color: var(--text-primary); font-size: 0.8rem; cursor: pointer;
+      transition: var(--transition-smooth); text-decoration: none; text-align: center;
+    }
+    .action-btn:hover { background: rgba(0,206,209,0.25); border-color: var(--accent-primary); }
+
+    /* 🎥 VIDEO BLUR OVERLAY */
+    .video-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: opacity 0.3s;
+    }
+    .play-btn {
+      width: 50px; height: 50px; background: var(--accent-primary);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; color: #000; transition: transform 0.2s;
+    }
+    .play-btn:hover { transform: scale(1.1); }
+
+    /* 🔍 ZOOM MODAL */
+    .zoom-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .zoom-modal.visible { opacity: 1; pointer-events: auto; }
+    .zoom-container { position: relative; max-width: 90vw; max-height: 85vh; overflow: hidden; }
+    .zoom-img { transition: transform 0.2s ease-out; cursor: grab; }
+    .zoom-controls {
+      position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 0.5rem; background: rgba(0,0,0,0.6);
+      padding: 0.4rem 0.8rem; border-radius: 50px; backdrop-filter: blur(6px);
+    }
+    .zoom-btn {
+      width: 32px; height: 32px; background: var(--glass-bg);
+      border: 1px solid var(--glass-border); border-radius: 50%;
+      color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .close-zoom { position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+
+    /* 📐 RESIZER PANEL */
+    .resizer-panel { display: none; }
+    .resizer-panel.visible { display: block; }
+    .resizer-box {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 2rem; max-width: 600px; margin: 0 auto;
+    }
+    .resizer-header { margin-bottom: 1.5rem; text-align: center; }
+    .resizer-form { display: flex; flex-direction: column; gap: 1rem; }
+    .input-group { display: flex; gap: 1rem; align-items: center; }
+    .input-group label { width: 80px; color: var(--text-secondary); font-size: 0.9rem; }
+    .input-group input[type="number"] {
+      flex: 1; padding: 0.6rem; background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      color: var(--text-primary);
+    }
+    .checkbox-group { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+    .preview-area {
+      margin-top: 1.5rem; text-align: center; border: 1px dashed var(--glass-border);
+      border-radius: var(--radius-md); padding: 1rem; min-height: 200px;
+      display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.15);
+    }
+    .preview-area img { max-width: 100%; max-height: 300px; object-fit: contain; }
+    .resizer-actions { display: flex; gap: 0.8rem; margin-top: 1rem; }
+
+    /* 🎵 AUDIO PLAYER */
+    .audio-card .card-thumb { background: linear-gradient(135deg, rgba(0,206,209,0.1), rgba(32,178,170,0.05)); }
+    .audio-visual { display: flex; align-items: center; gap: 0.3rem; height: 40px; }
+    .audio-bar { width: 4px; background: var(--accent-primary); border-radius: 2px; animation: pulse 1s infinite alternate; }
+    @keyframes pulse { from { height: 10%; } to { height: 90%; } }
+
+    /* ⏳ SKELETON */
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius-sm); }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .sk-card { height: 280px; }
+
+    /* 📱 RESPONSIVE */
+    @media (max-width: 640px) {
+      .nav { flex-wrap: wrap; padding: 0.8rem 1rem; }
+      .nav-links { width: 100%; justify-content: center; margin-top: 0.5rem; }
+      .header-bar { flex-direction: column; align-items: stretch; }
+      .input-group { flex-direction: column; align-items: stretch; }
+      .input-group label { width: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; transform: none !important; }
+    }
   </style>
 </head>
 <body>
-  <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h1>🖼️ Media Gallery <span id="admin-indicator" class="hidden admin-badge">ADMIN</span></h1>
-    <div>
-      <a href="upload.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">📤 Upload</a>
-      <a href="index.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">← Home</a>
+  <div class="depth-bg"></div>
+
+  <nav class="nav">
+    <div class="logo">MCALTONZ 2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="private.html" class="nav-link">Private</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="gallery.html" class="nav-link active">Gallery</a>
     </div>
   </nav>
 
-  <!-- Search & Filter -->
-  <div class="card">
-    <input type="text" id="search" placeholder="🔍 Search by filename or tag..." oninput="loadGallery()">
-    <select id="filter-type" onchange="loadGallery()">
-      <option value="all">All Types</option>
-      <option value="images">Images Only</option>
-      <option value="audio">Audio Only</option>
-      <option value="videos">Videos Only</option>
-      <option value="documents">Documents Only</option>
-    </select>
-    <input type="text" id="filter-tag" placeholder="Filter by tag..." oninput="loadGallery()">
+  <main class="gallery-container">
+    <div class="header-bar">
+      <div class="search-box">🔍 <input type="text" id="search-input" placeholder="Search files, tags, dates..."></div>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="image">🖼️ Images</button>
+        <button class="filter-btn" data-filter="video">🎥 Videos</button>
+        <button class="filter-btn" data-filter="audio">🎵 Audio</button>
+      </div>
+    </div>
+
+    <div class="tab-toggle">
+      <button class="tab-btn active" data-tab="gallery">📂 Gallery</button>
+      <button class="tab-btn" data-tab="resizer">📐 Image Resizer</button>
+    </div>
+
+    <!-- 🖼️ GALLERY GRID -->
+    <section id="gallery-tab" class="gallery-tab">
+      <div class="media-grid" id="media-grid">
+        <!-- ⚠️ DON'T TOUCH: Items injected here by Supabase fetch -->
+        <div class="media-card sk-card skeleton"></div>
+        <div class="media-card sk-card skeleton"></div>
+        <div class="media-card sk-card skeleton"></div>
+        <div class="media-card sk-card skeleton"></div>
+      </div>
+    </section>
+
+    <!-- 📐 RESIZER PANEL -->
+    <section id="resizer-tab" class="resizer-panel">
+      <div class="resizer-box">
+        <div class="resizer-header">
+          <h2>📐 Quick Image Resizer</h2>
+          <p style="color:var(--text-secondary); font-size:0.9rem;">Upload → Set Size → Export. 100% Client-Side.</p>
+        </div>
+        <div class="resizer-form">
+          <label class="btn" style="text-align:center; padding:0.8rem; background:rgba(0,206,209,0.1); border:1px solid var(--glass-border); border-radius:var(--radius-md); cursor:pointer;">
+            📁 Choose Image
+            <input type="file" id="resizer-input" accept="image/*" style="display:none;">
+          </label>
+          <div class="input-group">
+            <label>Width</label>
+            <input type="number" id="res-w" placeholder="Auto">
+            <label>Height</label>
+            <input type="number" id="res-h" placeholder="Auto">
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="res-lock" checked> 🔒 Lock Aspect Ratio
+          </div>
+          <div class="preview-area" id="resizer-preview">
+            <span style="color:var(--text-secondary)">Preview will appear here</span>
+          </div>
+          <div class="resizer-actions">
+            <button class="btn" style="flex:1; padding:0.7rem; background:transparent; border:1px solid var(--accent-primary); color:var(--accent-primary); border-radius:var(--radius-md); cursor:pointer;" id="res-reset">🔄 Reset</button>
+            <button class="btn" style="flex:1; padding:0.7rem; background:var(--accent-primary); border:none; color:#000; border-radius:var(--radius-md); font-weight:600; cursor:pointer;" id="res-export" disabled>💾 Resize & Download</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 🔍 ZOOM MODAL -->
+  <div class="zoom-modal" id="zoom-modal">
+    <button class="close-zoom" id="close-zoom">&times;</button>
+    <div class="zoom-container">
+      <img class="zoom-img" id="zoom-img" src="" alt="Zoomed">
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoom-out">➖</button>
+      <button class="zoom-btn" id="zoom-in">➕</button>
+      <button class="zoom-btn" id="zoom-reset">⛶</button>
+      <a class="zoom-btn" id="zoom-download" download>💾</a>
+    </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('grid'); this.classList.add('active')">⊞ Grid</div>
-    <div class="tab" onclick="switchTab('list'); this.classList.add('active')">☰ List</div>
-    <div class="tab" onclick="switchTab('stats'); this.classList.add('active')">📊 Stats</div>
-  </div>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // 🔐 SUPABASE CONFIG (Same as other pages)
+    const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-  <!-- Gallery Grid -->
-  <div id="gallery-grid" class="grid"></div>
-  <!-- Gallery List -->
-  <div id="gallery-list" class="hidden"></div>
-  <!-- Stats -->
-  <div id="gallery-stats" class="hidden card">
-    <h3>📊 Statistics</h3>
-    <div id="stats-content"></div>
-  </div>
+    // DOM Elements
+    const mediaGrid = document.getElementById('media-grid')
+    const searchInput = document.getElementById('search-input')
+    const filterBtns = document.querySelectorAll('.filter-btn')
+    const tabBtns = document.querySelectorAll('.tab-btn')
+    const galleryTab = document.getElementById('gallery-tab')
+    const resizerTab = document.getElementById('resizer-tab')
+    const zoomModal = document.getElementById('zoom-modal')
+    const zoomImg = document.getElementById('zoom-img')
+    const zoomDownload = document.getElementById('zoom-download')
+    
+    let mediaData = []
+    let currentZoomScale = 1
+    let currentZoomTranslate = { x: 0, y: 0 }
 
-  <div id="loading" style="text-align:center; padding:2rem">🔄 Loading...</div>
-  <div id="access-denied" class="hidden card" style="text-align:center">
-    ❌ Access denied.<br>
-    <a href="index.html">🔐 Log in</a> or <a href="private.html">🗝️ Admin bridge</a>
-  </div>
+    // 🌐 INIT
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchMedia()
+      setupTabs()
+      setupFilters()
+      setupSearch()
+      setupZoom()
+      setupResizer()
+    })
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
-    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+    // ⚠️ DON'T TOUCH: Supabase Fetch Logic (Keep RLS intact)
+    async function fetchMedia() {
+      // ⚠️ GANTI DENGAN SESSION CHECK ASLI KAMU:
+      // const { data: { session } } = await supabase.auth.getSession()
+      // const email = session?.user?.email
+      // if (!email) return showAuthGate()
 
-    const ADMIN_KEY = 'secret2026qwen'
-    let currentView = 'grid'
-    let allMedia = { images: [], audio: [], videos: [], documents: [] }
-    let currentUserEmail = null
-    let isAdminMode = false
-
-    // 🔐 Access Check
-    async function checkAccess() {
-      const urlParams = new URLSearchParams(window.location.search)
-      const isAdminParam = urlParams.get('admin') === 'true'
-      const storedKey = localStorage.getItem('adminKey')
+      // CONTOH FETCH (RLS-SAFE):
+      /*
+      const {  items, error } = await supabase
+        .from('uploads')
+        .select('id, file_name, file_path, file_type, file_size, created_at')
+        .eq('user_email', email)
+        .order('created_at', { ascending: false })
       
-      const {  { session } } = await supabase.auth.getSession()
-      
-      if (session?.user) {
-        currentUserEmail = session.user.email
-        isAdminMode = false
-        console.log('✅ Access: Supabase session')
-        loadGallery()
-      } 
-      else if (isAdminParam && storedKey === ADMIN_KEY) {
-        currentUserEmail = 'admin@bridge.local'
-        isAdminMode = true
-        console.log('✅ Access: Admin key bypass')
-        document.getElementById('admin-indicator').classList.remove('hidden')
-        loadGallery()
-      } 
-      else {
-        document.getElementById('loading').classList.add('hidden')
-        document.getElementById('access-denied').classList.remove('hidden')
-      }
+      if (error) { console.error(error); return; }
+      mediaData = items
+      renderGallery(mediaData)
+      */
+
+      // 🎯 DEMO DATA (Hapus setelah connect DB)
+      mediaData = [
+        { id: 1, file_name: 'mountain.jpg', file_path: 'https://placehold.co/600x400/0a122a/00ced1?text=Image', file_type: 'image/jpeg', file_size: 245000, created_at: '2026-01-15T10:30:00Z' },
+        { id: 2, file_name: 'clip_4k.mp4', file_path: '', file_type: 'video/mp4', file_size: 15000000, created_at: '2026-01-12T14:20:00Z' },
+        { id: 3, file_name: 'track_01.mp3', file_path: '', file_type: 'audio/mpeg', file_size: 3200000, created_at: '2026-01-10T08:15:00Z' },
+        { id: 4, file_name: 'design_v2.png', file_path: 'https://placehold.co/600x600/0a122a/20b2aa?text=Art', file_type: 'image/png', file_size: 890000, created_at: '2025-12-28T19:45:00Z' }
+      ]
+      renderGallery(mediaData)
     }
 
-    async function loadGallery() {
-      const search = document.getElementById('search').value.toLowerCase()
-      const filterType = document.getElementById('filter-type').value
-      const filterTag = document.getElementById('filter-tag').value.toLowerCase()
-      
-      document.getElementById('loading').classList.remove('hidden')
-      
-      const tables = ['images', 'audio', 'videos', 'documents']
-      allMedia = {}
-      
-      for (const table of tables) {
-        let query = supabase.from(table).select('*').order('created_at', { ascending: false })
-        
-        // Filter by user unless admin mode
-        if (!isAdminMode) {
-          query = query.eq('user_email', currentUserEmail)
-        }
-        
-        if (filterType !== 'all' && table !== filterType) continue
-        
-        const {  } = await query
-        allMedia[table] = data || []
-      }
-      
-      // Filter & Search
-      let filtered = []
-      for (const [type, items] of Object.entries(allMedia)) {
-        for (const item of items) {
-          const matchesSearch = !search || item.file_name.toLowerCase().includes(search) || (item.tags && item.tags.some(t => t.toLowerCase().includes(search)))
-          const matchesTag = !filterTag || (item.tags && item.tags.some(t => t.toLowerCase().includes(filterTag)))
-          
-          if (matchesSearch && matchesTag) {
-            filtered.push({ ...item, type })
-          }
-        }
-      }
-      
-      renderGallery(filtered)
-      document.getElementById('loading').classList.add('hidden')
-    }
-
-    function renderGallery(items) {
-      const grid = document.getElementById('gallery-grid')
-      const list = document.getElementById('gallery-list')
-      
-      if (items.length === 0) {
-        grid.innerHTML = list.innerHTML = '<div class="card" style="grid-column:1/-1; text-align:center">📭 No media found. <a href="upload.html">Upload something!</a></div>'
+    // 🖼️ RENDER GRID
+    function renderGallery(data) {
+      mediaGrid.innerHTML = ''
+      if (data.length === 0) {
+        mediaGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-secondary)">No media found. Upload something first! 📤</div>'
         return
       }
-      
-      // Grid View
-      grid.innerHTML = items.map(item => `
-        <div class="item">
-          ${renderPreview(item)}
-          <div style="padding:0.5rem">
-            <div style="font-weight:bold; font-size:0.9rem">${item.file_name}</div>
-            <small>${item.type} • ${(item.file_size/1024).toFixed(1)} KB</small><br>
-            ${item.tags ? item.tags.map(t => `<span style="background:#1a1a2e; padding:0.1rem 0.3rem; margin:0.1rem; border-radius:2px; font-size:0.7rem">#${t}</span>`).join('') : ''}
-            <div style="margin-top:0.5rem">
-              <button onclick="copyUrl('${item.file_url}')" style="font-size:0.7rem">🔗 Copy</button>
-              ${!isAdminMode ? `<button onclick="deleteItem('${item.type}', '${item.id}')" style="font-size:0.7rem; border-color:#ff6b6b; color:#ff6b6b">🗑️ Delete</button>` : ''}
+
+      data.forEach(item => {
+        const card = document.createElement('div')
+        card.className = `media-card ${item.file_type.startsWith('audio') ? 'audio-card' : ''}`
+        card.dataset.type = item.file_type.split('/')[0]
+
+        let thumb = ''
+        let badge = item.file_type.split('/')[1].toUpperCase()
+        
+        if (item.file_type.startsWith('image/')) {
+          thumb = `<img src="${item.file_path}" loading="lazy" alt="${item.file_name}">`
+        } else if (item.file_type.startsWith('video/')) {
+          thumb = `<div class="video-overlay" data-src="${item.file_path}"><div class="play-btn">▶</div></div>`
+        } else if (item.file_type.startsWith('audio/')) {
+          thumb = `<div class="audio-visual">${'<div class="audio-bar" style="animation-delay:'+Math.random()*0.5+'s"></div>'.repeat(12)}</div>`
+        }
+
+        card.innerHTML = `
+          <div class="card-thumb" data-type="${item.file_type.split('/')[0]}" data-path="${item.file_path}">${thumb}<span class="badge">${badge}</span></div>
+          <div class="card-info">
+            <div class="card-title" title="${item.file_name}">${item.file_name}</div>
+            <div class="card-meta">
+              <span>${formatSize(item.file_size)}</span>
+              <span>${formatDate(item.created_at)}</span>
+            </div>
+            <div class="card-actions">
+              ${item.file_type.startsWith('image/') ? `<button class="action-btn zoom-btn-card">🔍 Zoom</button>` : `<button class="action-btn preview-btn-card">▶ Play</button>`}
+              <a class="action-btn" href="${item.file_path}" download="${item.file_name}">💾 Download</a>
             </div>
           </div>
-        </div>
-      `).join('')
-      
-      // List View
-      list.innerHTML = `<div class="card">${items.map(item => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem; border-bottom:1px solid #1a1a2e">
-          <div style="flex:1">
-            <div style="font-weight:bold">${item.file_name}</div>
-            <small>${item.type} • ${(item.file_size/1024).toFixed(1)} KB • ${new Date(item.created_at).toLocaleDateString()}</small>
-          </div>
-          <div>
-            <button onclick="copyUrl('${item.file_url}')" style="font-size:0.7rem">🔗 Copy</button>
-            ${!isAdminMode ? `<button onclick="deleteItem('${item.type}', '${item.id}')" style="font-size:0.7rem; border-color:#ff6b6b; color:#ff6b6b">🗑️</button>` : ''}
-          </div>
-        </div>
-      `).join('')}</div>`
-      
-      updateStats()
+        `
+        mediaGrid.appendChild(card)
+
+        // Event binding per card
+        if (item.file_type.startsWith('image/')) {
+          card.querySelector('.zoom-btn-card').addEventListener('click', () => openZoom(item.file_path, item.file_name))
+        }
+        if (item.file_type.startsWith('video/')) {
+          card.querySelector('.preview-btn-card').addEventListener('click', () => loadVideo(card, item.file_path))
+        }
+      })
+
+      // Lazy load observer for thumbnails
+      const imgObserver = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('loaded'); obs.unobserve(e.target) } })
+      }, { rootMargin: '100px' })
+      document.querySelectorAll('img[loading="lazy"]').forEach(img => imgObserver.observe(img))
     }
 
-    function renderPreview(item) {
-      if (item.type === 'images' && item.mime_type?.startsWith('image/')) {
-        return `<img src="${item.file_url}" alt="${item.file_name}">`
-      } else if (item.type === 'videos' && item.mime_type?.startsWith('video/')) {
-        return `<video src="${item.file_url}" controls></video>`
-      } else if (item.type === 'audio' && item.mime_type?.startsWith('audio/')) {
-        return `<audio src="${item.file_url}" controls style="width:100%"></audio>`
-      } else {
-        return `<div style="height:150px; display:flex; align-items:center; justify-content:center; background:#1a1a2e; border-radius:4px">📄 ${item.file_name.split('.').pop().toUpperCase()}</div>`
+    // 🔄 TABS & FILTERS
+    function setupTabs() {
+      tabBtns.forEach(btn => btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        galleryTab.style.display = btn.dataset.tab === 'gallery' ? 'block' : 'none'
+        resizerTab.classList.toggle('visible', btn.dataset.tab === 'resizer')
+      }))
+    }
+    function setupFilters() {
+      filterBtns.forEach(btn => btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        const type = btn.dataset.filter
+        renderGallery(type === 'all' ? mediaData : mediaData.filter(i => i.file_type.startsWith(type)))
+      }))
+    }
+    function setupSearch() {
+      searchInput.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase()
+        const activeType = document.querySelector('.filter-btn.active').dataset.filter
+        const base = activeType === 'all' ? mediaData : mediaData.filter(i => i.file_type.startsWith(activeType))
+        renderGallery(base.filter(i => i.file_name.toLowerCase().includes(q) || i.created_at.includes(q)))
+      })
+    }
+
+    // 🔍 ZOOM LOGIC (Lightweight)
+    function openZoom(src, name) {
+      zoomImg.src = src
+      zoomDownload.href = src
+      zoomDownload.download = name
+      zoomModal.classList.add('visible')
+      currentZoomScale = 1; currentZoomTranslate = { x: 0, y: 0 }
+      updateZoom()
+    }
+    document.getElementById('close-zoom').addEventListener('click', () => zoomModal.classList.remove('visible'))
+    zoomModal.addEventListener('click', (e) => { if (e.target === zoomModal) zoomModal.classList.remove('visible') })
+    
+    document.getElementById('zoom-in').addEventListener('click', () => { currentZoomScale = Math.min(currentZoomScale + 0.25, 4); updateZoom() })
+    document.getElementById('zoom-out').addEventListener('click', () => { currentZoomScale = Math.max(currentZoomScale - 0.25, 0.5); updateZoom() })
+    document.getElementById('zoom-reset').addEventListener('click', () => { currentZoomScale = 1; currentZoomTranslate = { x:0, y:0 }; updateZoom() })
+    zoomModal.addEventListener('wheel', (e) => { e.preventDefault(); currentZoomScale += (e.deltaY > 0 ? -0.1 : 0.1); currentZoomScale = Math.max(0.5, Math.min(currentZoomScale, 4)); updateZoom() })
+    
+    function updateZoom() { zoomImg.style.transform = `translate(${currentZoomTranslate.x}px, ${currentZoomTranslate.y}px) scale(${currentZoomScale})` }
+
+    // 🎥 VIDEO LOAD ON PLAY (Blur-to-Play)
+    function loadVideo(card, src) {
+      const overlay = card.querySelector('.video-overlay')
+      const thumbDiv = card.querySelector('.card-thumb')
+      if (!overlay || thumbDiv.querySelector('video')) return
+      
+      const vid = document.createElement('video')
+      vid.src = src; vid.controls = true; vid.style.width = '100%'; vid.style.height = '100%'; vid.style.objectFit = 'contain'
+      vid.preload = 'auto'
+      
+      overlay.style.opacity = '0'
+      setTimeout(() => { overlay.remove(); thumbDiv.appendChild(vid); vid.play() }, 300)
+    }
+
+    // 📐 RESIZER ENGINE
+    function setupResizer() {
+      const input = document.getElementById('resizer-input')
+      const wIn = document.getElementById('res-w'), hIn = document.getElementById('res-h')
+      const lock = document.getElementById('res-lock')
+      const preview = document.getElementById('resizer-preview')
+      const exportBtn = document.getElementById('res-export')
+      let imgObj = null, origW = 0, origH = 0
+
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (!file) return
+        const reader = new FileReader()
+        reader.onload = (ev) => {
+          imgObj = new Image()
+          imgObj.onload = () => {
+            origW = imgObj.width; origH = imgObj.height
+            wIn.value = origW; hIn.value = origH
+            preview.innerHTML = ''
+            preview.appendChild(imgObj)
+            exportBtn.disabled = false
+          }
+          imgObj.src = ev.target.result
+        }
+        reader.readAsDataURL(file)
+      })
+
+      const updateRatio = (changed) => {
+        if (!lock.checked || !origW) return
+        const ratio = origW / origH
+        if (changed === 'w' && wIn.value) hIn.value = Math.round(wIn.value / ratio)
+        if (changed === 'h' && hIn.value) wIn.value = Math.round(hIn.value * ratio)
       }
+      wIn.addEventListener('input', () => updateRatio('w'))
+      hIn.addEventListener('input', () => updateRatio('h'))
+
+      exportBtn.addEventListener('click', () => {
+        if (!imgObj) return
+        const canvas = document.createElement('canvas')
+        canvas.width = parseInt(wIn.value) || origW
+        canvas.height = parseInt(hIn.value) || origH
+        canvas.getContext('2d').drawImage(imgObj, 0, 0, canvas.width, canvas.height)
+        const link = document.createElement('a')
+        link.download = `resized_${canvas.width}x${canvas.height}.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
+      })
+
+      document.getElementById('res-reset').addEventListener('click', () => {
+        input.value = ''; wIn.value = ''; hIn.value = ''; preview.innerHTML = '<span style="color:var(--text-secondary)">Preview will appear here</span>'; exportBtn.disabled = true
+      })
     }
 
-    function updateStats() {
-      const total = Object.values(allMedia).flat().length
-      const totalSize = Object.values(allMedia).flat().reduce((sum, item) => sum + (item.file_size || 0), 0)
-      
-      document.getElementById('stats-content').innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1rem 0">
-          <div class="card"><div style="font-size:2rem; font-weight:bold">${total}</div><small>Total Files</small></div>
-          <div class="card"><div style="font-size:2rem; font-weight:bold">${(totalSize/1024/1024).toFixed(2)} MB</div><small>Total Size</small></div>
-          <div class="card"><div style="font-size:2rem; font-weight:bold">${allMedia.images?.length || 0}</div><small>Images</small></div>
-          <div class="card"><div style="font-size:2rem; font-weight:bold">${allMedia.videos?.length || 0}</div><small>Videos</small></div>
-        </div>
-      `
-    }
+    // 🛠️ UTILS
+    function formatSize(b) { const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(1))+' '+s[i] }
+    function formatDate(iso) { const d = new Date(iso); return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}` }
 
-    window.switchTab = (view) => {
-      currentView = view
-      document.getElementById('gallery-grid').classList.toggle('hidden', view !== 'grid')
-      document.getElementById('gallery-list').classList.toggle('hidden', view !== 'list')
-      document.getElementById('gallery-stats').classList.toggle('hidden', view !== 'stats')
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
-      event.target.classList.add('active')
-    }
-
-    window.copyUrl = (url) => {
-      navigator.clipboard.writeText(url)
-      alert('✅ URL copied: ' + url)
-    }
-
-    window.deleteItem = async (table, id) => {
-      if (!confirm('🗑️ Delete this item?')) return
-      const { error } = await supabase.from(table).delete().eq('id', id).eq('user_email', currentUserEmail)
-      if (error) alert('❌ ' + error.message)
-      else loadGallery()
-    }
-
-    // Init
-    checkAccess()
+    // Expose
+    window.fetchMedia = fetchMedia
   </script>
 </body>
 </html>

@@ -1,65 +1,447 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="utf-8">
-  <title>Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📊 MCALTONZ 2026 // Data Hub</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:1rem; max-width:800px; margin:0 auto; }
-    .card { background:#1a1a2e; padding:1rem; margin:0.5rem 0; border-left:3px solid #00ff9d; border-radius:4px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; }
-    .stat { font-size:1.8rem; font-weight:bold; color:#fff; margin:0.5rem 0; }
-    .btn { padding:0.5rem 1rem; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; cursor:pointer; text-decoration:none; display:inline-block; }
-    .btn:hover { background:#00ff9d; color:#0a0a0f; }
-    .hidden { display:none; }
-    small { color:#888; }
+    /* 🌍 GLOBAL DESIGN SYSTEM (Sync with index.html) */
+    :root {
+      --bg-deep: #050508; --bg-mid: #0a0a12;
+      --accent-cyan: #00f3ff; --accent-violet: #7000ff; --accent-pink: #ff2a6d;
+      --accent-green: #00ff9d; --accent-orange: #ff9f43;
+      --glass-bg: rgba(255,255,255,0.04); --glass-border: rgba(255,255,255,0.12);
+      --text-primary: #e6e8ff; --text-secondary: #8a8da0;
+      --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px;
+      --font-main: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+      --transition-smooth: 0.4s cubic-bezier(0.16,1,0.3,1);
+      --shadow-glow: 0 0 20px rgba(0,243,255,0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep); color: var(--text-primary);
+      font-family: var(--font-main); overflow-x: hidden; min-height: 100vh;
+      padding-top: 72px; /* Nav height */
+    }
+
+    /* 🌐 DEPTH BACKGROUND */
+    .depth-bg {
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(circle at 30% 20%, rgba(112,0,255,0.12) 0%, transparent 45%),
+                  radial-gradient(circle at 70% 80%, rgba(0,243,255,0.1) 0%, transparent 45%),
+                  var(--bg-deep);
+    }
+    .depth-bg::after {
+      content: ""; position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
+      opacity: 0.5;
+    }
+
+    /* 🖥️ NAV (Consistent) */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 2rem; background: rgba(10,10,18,0.8);
+      backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border);
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.3rem; font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .nav-links { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .nav-link {
+      padding: 0.5rem 0.9rem; border-radius: var(--radius-md);
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;
+      transition: var(--transition-smooth);
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-primary); border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0,243,255,0.25);
+    }
+
+    /* 📊 DASHBOARD LAYOUT */
+    .dashboard { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .page-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .page-title { font-size: 1.8rem; font-weight: 700; }
+    .user-badge {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 1rem; background: var(--glass-bg);
+      border: 1px solid var(--glass-border); border-radius: 50px;
+      font-size: 0.9rem;
+    }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* 📈 STATS GRID */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 1.5rem; position: relative;
+      overflow: hidden; transition: var(--transition-smooth);
+      transform-style: preserve-3d; cursor: default;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px) rotateX(1deg) rotateY(1deg);
+      box-shadow: var(--shadow-glow); border-color: var(--accent-cyan);
+    }
+    .stat-card::before {
+      content: ""; position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,243,255,0.15) 0%, transparent 65%);
+      transition: opacity 0.2s; pointer-events: none;
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+    .stat-label { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; font-family: var(--font-mono); }
+    .stat-delta { font-size: 0.8rem; margin-top: 0.3rem; }
+    .stat-delta.up { color: var(--accent-green); }
+    .stat-delta.down { color: var(--accent-pink); }
+
+    /* 📊 CHART SECTION */
+    .chart-section {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;
+    }
+    .chart-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem; flex-wrap: wrap; gap: 0.8rem;
+    }
+    .chart-title { font-size: 1.2rem; font-weight: 600; }
+    .chart-controls { display: flex; gap: 0.5rem; }
+    .chart-btn {
+      padding: 0.4rem 0.8rem; background: var(--glass-bg);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .chart-btn.active, .chart-btn:hover {
+      color: var(--text-primary); border-color: var(--accent-cyan);
+    }
+
+    /* 📊 CSS-ONLY BAR CHART */
+    .bar-chart {
+      display: flex; align-items: flex-end; gap: 0.4rem;
+      height: 120px; padding: 1rem 0; border-bottom: 1px solid var(--glass-border);
+    }
+    .bar {
+      flex: 1; background: linear-gradient(180deg, var(--accent-cyan), var(--accent-violet));
+      border-radius: 4px 4px 0 0; position: relative; min-width: 20px;
+      transition: height 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .bar::after {
+      content: attr(data-label); position: absolute; bottom: -20px; left: 50%;
+      transform: translateX(-50%); font-size: 0.7rem; color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .bar::before {
+      content: attr(data-value); position: absolute; top: -18px; left: 50%;
+      transform: translateX(-50%); font-size: 0.75rem; font-weight: 600;
+      color: var(--accent-cyan); font-family: var(--font-mono);
+    }
+
+    /* 📋 ACTIVITY FEED */
+    .activity-section {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 1.5rem;
+    }
+    .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+    .activity-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .activity-item {
+      display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem;
+      background: rgba(255,255,255,0.02); border-radius: var(--radius-md);
+      transition: var(--transition-smooth);
+    }
+    .activity-item:hover { background: rgba(255,255,255,0.05); }
+    .activity-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .activity-icon.upload { background: rgba(0,243,255,0.15); color: var(--accent-cyan); }
+    .activity-icon.view { background: rgba(112,0,255,0.15); color: var(--accent-violet); }
+    .activity-icon.delete { background: rgba(255,42,109,0.15); color: var(--accent-pink); }
+    .activity-content { flex: 1; min-width: 0; }
+    .activity-title { font-size: 0.95rem; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .activity-meta { font-size: 0.8rem; color: var(--text-secondary); }
+    .activity-time { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; white-space: nowrap; }
+
+    /* ⏳ SKELETON LOADING */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .skeleton-stat { height: 80px; }
+    .skeleton-bar { height: 120px; display: flex; align-items: flex-end; gap: 0.4rem; }
+    .skeleton-bar .skeleton { height: 60px; flex: 1; border-radius: 4px 4px 0 0; }
+    .skeleton-item { height: 56px; }
+
+    /* 🔐 AUTH GATE (Show if not logged in) */
+    .auth-gate {
+      text-align: center; padding: 4rem 2rem;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); max-width: 500px; margin: 4rem auto;
+    }
+    .auth-gate h3 { margin-bottom: 1rem; }
+    .auth-gate p { color: var(--text-secondary); margin-bottom: 1.5rem; }
+    .auth-gate a {
+      display: inline-block; padding: 0.7rem 1.5rem;
+      background: var(--accent-cyan); color: #000; text-decoration: none;
+      border-radius: var(--radius-md); font-weight: 600;
+      transition: var(--transition-smooth);
+    }
+    .auth-gate a:hover { box-shadow: 0 0 20px rgba(0,243,255,0.5); }
+
+    /* 🌊 ANIMATIONS */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.2s; }
+    .stagger-3 { transition-delay: 0.3s; } .stagger-4 { transition-delay: 0.4s; }
+
+    /* 📱 RESPONSIVE */
+    @media (max-width: 768px) {
+      .nav { padding: 0.8rem 1rem; flex-wrap: wrap; }
+      .nav-links { width: 100%; justify-content: center; margin-top: 0.5rem; }
+      .dashboard { padding: 1rem; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .bar-chart { height: 100px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; transform: none !important; }
+      .bar { transition: none; }
+    }
   </style>
 </head>
 <body>
-  <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h1>📊 Dashboard</h1>
-    <div>
-      <a href="index.html" class="btn">← Home</a>
-      <button id="logout" class="btn">🚪 Logout</button>
+  <div class="depth-bg"></div>
+
+  <!-- 🖥️ NAV -->
+  <nav class="nav">
+    <div class="logo">MCALTONZ 2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="private.html" class="nav-link">Private</a>
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="admin-ready.html" class="nav-link">Admin</a>
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
     </div>
   </nav>
 
-  <div id="loading" class="card">🔄 Loading dashboard...</div>
-  <div id="dashboard" class="hidden">
-    <div class="card">👋 Welcome, <strong id="user-email"></strong></div>
-    <div class="grid">
-      <div class="card"><div>💬 Your Messages</div><div id="msg-count" class="stat">0</div></div>
-      <div class="card"><div>📁 Uploaded Files</div><div id="storage-count" class="stat">0</div></div>
-      <div class="card"><div>🔐 Login Provider</div><div id="provider" class="stat">-</div></div>
-    </div>
-    <div class="card">
-      <h3>📜 Recent Activity</h3>
-      <div id="activity-list"><em>Loading...</em></div>
-    </div>
+  <!-- 🔐 AUTH GATE (Hidden if logged in) -->
+  <div id="auth-gate" class="auth-gate reveal" style="display:none">
+    <h3>🔐 Session Required</h3>
+    <p>Please sign in to view your dashboard.</p>
+    <a href="index.html">→ Go to Login</a>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
-    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
-    const {  { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = 'index.html'; }
+  <!-- 📊 MAIN DASHBOARD (Hidden until auth) -->
+  <main id="dashboard-main" class="dashboard" style="display:none">
     
-    const user = session.user
-    document.getElementById('user-email').textContent = user.email
-    document.getElementById('provider').textContent = user.app_metadata?.provider?.toUpperCase() || 'EMAIL'
-    
-    const { count: msgCount } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_email', user.email)
-    document.getElementById('msg-count').textContent = msgCount || 0
-    
-    const {  } = await supabase.storage.from('uploads').list(`public/${user.id}`)
-    document.getElementById('storage-count').textContent = `${files?.length || 0} files`
-    
-    const {  } = await supabase.from('messages').select('content, created_at').eq('user_email', user.email).order('created_at', { ascending: false }).limit(5)
-    const list = document.getElementById('activity-list')
-    list.innerHTML = data?.length ? data.map(m => `<div style="margin:0.3rem 0; padding:0.5rem; background:#0a0a0f; border-left:2px solid #00ff9d;">${m.content} <small>${new Date(m.created_at).toLocaleTimeString()}</small></div>`).join('') : '<em>No activity yet.</em>'
-    
-    document.getElementById('loading').classList.add('hidden')
-    document.getElementById('dashboard').classList.remove('hidden')
-    document.getElementById('logout').onclick = async () => { await supabase.auth.signOut(); window.location.href = 'index.html'; }
+    <!-- HEADER -->
+    <div class="page-header reveal">
+      <h1 class="page-title">📊 Data Hub</h1>
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="user-email">user@mcaltonz.dev</span>
+      </div>
+    </div>
+
+    <!-- 📈 STATS GRID -->
+    <div class="stats-grid">
+      <div class="stat-card reveal stagger-1" data-tilt>
+        <span class="stat-icon">📤</span>
+        <div class="stat-label">Total Uploads</div>
+        <!-- ⚠️ DON'T TOUCH: This span gets updated by Supabase query -->
+        <div class="stat-value" id="stat-uploads" data-target="0">0</div>
+        <div class="stat-delta up" id="delta-uploads">+0 this week</div>
+      </div>
+      <div class="stat-card reveal stagger-2" data-tilt>
+        <span class="stat-icon">👁️</span>
+        <div class="stat-label">Total Views</div>
+        <div class="stat-value" id="stat-views" data-target="0">0</div>
+        <div class="stat-delta up" id="delta-views">+0 this week</div>
+      </div>
+      <div class="stat-card reveal stagger-3" data-tilt>
+        <span class="stat-icon">💾</span>
+        <div class="stat-label">Storage Used</div>
+        <div class="stat-value" id="stat-storage">0 MB</div>
+        <div class="stat-delta">of 1 GB limit</div>
+      </div>
+      <div class="stat-card reveal stagger-4" data-tilt>
+        <span class="stat-icon">🤖</span>
+        <div class="stat-label">AI Credits</div>
+        <div class="stat-value" id="stat-credits">100</div>
+        <div class="stat-delta up">Refreshes daily</div>
+      </div>
+    </div>
+
+    <!-- 📊 CHART SECTION -->
+    <section class="chart-section reveal">
+      <div class="chart-header">
+        <h3 class="chart-title">📈 Activity Overview</h3>
+        <div class="chart-controls">
+          <button class="chart-btn active" data-range="7d">7D</button>
+          <button class="chart-btn" data-range="30d">30D</button>
+          <button class="chart-btn" data-range="90d">90D</button>
+        </div>
+      </div>
+      <!-- ⚠️ DON'T TOUCH: This container gets populated by Supabase + Chart logic -->
+      <div class="bar-chart" id="activity-chart">
+        <!-- Skeleton while loading -->
+        <div class="skeleton-bar" id="chart-skeleton">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+        <!-- Dynamic bars injected here -->
+      </div>
+    </section>
+
+    <!-- 📋 RECENT ACTIVITY -->
+    <section class="activity-section reveal">
+      <h3 class="section-title">🕐 Recent Activity</h3>
+      <!-- ⚠️ DON'T TOUCH: This list gets populated by Supabase .select() query -->
+      <div class="activity-list" id="activity-list">
+        <!-- Skeleton items while loading -->
+        <div class="activity-item skeleton-item skeleton"></div>
+        <div class="activity-item skeleton-item skeleton"></div>
+        <div class="activity-item skeleton-item skeleton"></div>
+        <!-- Dynamic items injected here -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // 🔐 SUPABASE CONFIG (Same as index.html)
+    const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // DOM Elements
+    const authGate = document.getElementById('auth-gate')
+    const dashboardMain = document.getElementById('dashboard-main')
+    const userEmailEl = document.getElementById('user-email')
+    const userAvatarEl = document.getElementById('user-avatar')
+
+    // ✅ SAFE: UI Animation Engine (Same as index.html)
+    (function initUI() {
+      // Scroll Reveal
+      const reveals = document.querySelectorAll('.reveal')
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => e.isIntersecting && e.target.classList.add('visible'))
+      }, { threshold: 0.1 })
+      reveals.forEach(el => observer.observe(el))
+
+      // Mouse Glow on Cards
+      document.querySelectorAll('[data-tilt]').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect()
+          const x = ((e.clientX - rect.left) / rect.width) * 100
+          const y = ((e.clientY - rect.top) / rect.height) * 100
+          card.style.setProperty('--mx', `${x}%`)
+          card.style.setProperty('--my', `${y}%`)
+        })
+      })
+
+      // Chart Range Buttons (UI only)
+      document.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'))
+          this.classList.add('active')
+          // ⚠️ DON'T TOUCH: Add your Supabase query filter here based on data-range
+          // Example: fetchActivityData(this.dataset.range)
+          console.log(`📊 Filter changed to: ${this.dataset.range}`)
+        })
+      })
+    })()
+
+    // 🔐 AUTH CHECK + DASHBOARD INIT
+    async function initDashboard() {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.user) {
+        authGate.style.display = 'block'
+        dashboardMain.style.display = 'none'
+        return
+      }
+
+      // ✅ Show dashboard
+      authGate.style.display = 'none'
+      dashboardMain.style.display = 'block'
+      
+      // ✅ Set user info
+      const email = session.user.email
+      userEmailEl.textContent = email
+      userAvatarEl.textContent = email.charAt(0).toUpperCase()
+      
+      // ✅ Trigger reveal animations
+      setTimeout(() => {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'))
+      }, 100)
+
+      // ⚠️ DON'T TOUCH: This is where you fetch & render Supabase data
+      // Example structure (keep RLS filter: .eq('user_email', email)):
+      /*
+      async function fetchDashboardData() {
+        // 1. Stats
+        const { count: uploads } = await supabase.from('uploads').select('*', { count: 'exact', head: true }).eq('user_email', email)
+        animateCounter('stat-uploads', uploads || 0)
+        
+        // 2. Chart data
+        const { data: activity } = await supabase.from('activity').select('date, count').eq('user_email', email).order('date')
+        renderChart(activity)
+        
+        // 3. Recent items
+        const { data: recent } = await supabase.from('uploads').select('id, filename, created_at').eq('user_email', email).order('created_at', { ascending: false }).limit(5)
+        renderActivityList(recent)
+      }
+      fetchDashboardData()
+      */
+
+      // 🎯 SAMPLE: Animate counter (safe UI function)
+      function animateCounter(elementId, target) {
+        const el = document.getElementById(elementId)
+        if (!el) return
+        const duration = 1200, start = 0, startTime = performance.now()
+        function step(now) {
+          const progress = Math.min((now - startTime) / duration, 1)
+          const value = Math.floor(start + (target - start) * (1 - Math.pow(1 - progress, 3)))
+          el.textContent = value.toLocaleString()
+          if (progress < 1) requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+      }
+    }
+
+    // Init on load
+    document.addEventListener('DOMContentLoaded', initDashboard)
+
+    // Expose for debugging
+    window.animateCounter = animateCounter
   </script>
 </body>
 </html>

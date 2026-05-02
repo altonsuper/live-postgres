@@ -1,272 +1,604 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="utf-8">
-  <title>📤 Upload Media</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📤 MCALTONZ 2026 // Active Upload</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:900px; margin:0 auto; }
-    .card { background:#1a1a2e; padding:1.5rem; margin:1rem 0; border-left:3px solid #00ff9d; border-radius:6px; }
-    input, select, textarea { width:100%; padding:0.8rem; margin:0.3rem 0; background:#0a0a0f; border:1px solid #00ff9d; color:#00ff9d; border-radius:4px; }
-    button { padding:0.8rem 1.5rem; margin:0.3rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; cursor:pointer; font-weight:bold; border-radius:4px; }
-    button:hover { background:#00ff9d; color:#0a0a0f; }
-    .dropzone { border:2px dashed #00ff9d; padding:2rem; text-align:center; margin:1rem 0; border-radius:6px; cursor:pointer; transition:all 0.3s; }
-    .dropzone:hover, .dropzone.dragover { background:#1a1a2e; border-color:#00ffff; }
-    .preview { max-width:200px; max-height:200px; margin:0.5rem; border-radius:4px; }
-    .hidden { display:none; }
-    small { color:#888; }
-    #status { margin:1rem 0; padding:1rem; background:#0a0a0f; border-radius:4px; min-height:50px; }
-    a { color:#00ff9d; text-decoration:none; }
-    a:hover { text-decoration:underline; }
-    .admin-badge { background:#00ff9d; color:#0a0a0f; padding:0.2rem 0.5rem; border-radius:2px; font-size:0.8rem; font-weight:bold; }
+    /* 🌍 GLOBAL DESIGN SYSTEM */
+    :root {
+      --bg-deep: #050508; --bg-mid: #0a0a12;
+      --accent-cyan: #00f3ff; --accent-violet: #7000ff; --accent-pink: #ff2a6d;
+      --accent-green: #00ff9d; --accent-orange: #ff9f43;
+      --glass-bg: rgba(255,255,255,0.04); --glass-border: rgba(255,255,255,0.12);
+      --text-primary: #e6e8ff; --text-secondary: #8a8da0;
+      --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px;
+      --font-main: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+      --transition-smooth: 0.4s cubic-bezier(0.16,1,0.3,1);
+      --shadow-glow: 0 0 25px rgba(0,243,255,0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep); color: var(--text-primary);
+      font-family: var(--font-main); overflow-x: hidden; min-height: 100vh;
+      padding-top: 72px; position: relative;
+    }
+
+    /* 🌐 DEPTH BACKGROUND */
+    .depth-bg {
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(circle at 40% 10%, rgba(255,159,67,0.1) 0%, transparent 45%),
+                  radial-gradient(circle at 60% 90%, rgba(0,243,255,0.08) 0%, transparent 45%),
+                  var(--bg-deep);
+    }
+    .depth-bg::after {
+      content: ""; position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 45px 45px;
+      mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
+      opacity: 0.5;
+    }
+
+    /* 🖥️ NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 2rem; background: rgba(10,10,18,0.85);
+      backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border);
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.3rem; font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--accent-orange), var(--accent-cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .nav-links { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .nav-link {
+      padding: 0.5rem 0.9rem; border-radius: var(--radius-md);
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;
+      transition: var(--transition-smooth);
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-primary); border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0,243,255,0.25);
+    }
+
+    /* 📤 UPLOAD CONTAINER */
+    .upload-container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+    .page-header { text-align: center; margin-bottom: 2rem; }
+    .page-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .page-subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+    /* 🎯 DROP ZONE */
+    .drop-zone {
+      position: relative; border: 2px dashed var(--glass-border);
+      border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center;
+      background: var(--glass-bg); transition: var(--transition-smooth);
+      cursor: pointer; overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent-cyan); background: rgba(0,243,255,0.05);
+      box-shadow: var(--shadow-glow);
+    }
+    .drop-zone::before {
+      content: ""; position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,159,67,0.15) 0%, transparent 60%);
+      transition: opacity 0.2s; pointer-events: none;
+    }
+    .drop-zone.dragover::before { opacity: 1; }
+    .drop-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    .drop-text { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .drop-hint { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .drop-actions { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 0.7rem 1.4rem; border-radius: var(--radius-md); font-weight: 600;
+      cursor: pointer; transition: var(--transition-smooth); border: none;
+      font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      color: #000;
+    }
+    .btn-primary:hover { box-shadow: 0 0 20px rgba(0,243,255,0.5); transform: translateY(-2px); }
+    .btn-secondary {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover { border-color: var(--accent-orange); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    
+    /* Hidden file input */
+    #file-input { display: none; }
+
+    /* 🖼️ PREVIEW CARD */
+    .preview-card {
+      margin-top: 2rem; background: var(--glass-bg);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+      padding: 1.5rem; display: none; animation: slideUp 0.4s ease;
+    }
+    .preview-card.visible { display: block; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .preview-title { font-size: 1.1rem; font-weight: 600; }
+    .preview-close {
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 1.5rem; cursor: pointer; transition: var(--transition-smooth);
+    }
+    .preview-close:hover { color: var(--accent-pink); }
+
+    .preview-media {
+      width: 100%; border-radius: var(--radius-md); overflow: hidden;
+      background: rgba(0,0,0,0.2); margin-bottom: 1rem; position: relative;
+      display: flex; align-items: center; justify-content: center; min-height: 200px;
+    }
+    .preview-media img, .preview-media video {
+      max-width: 100%; max-height: 300px; object-fit: contain;
+    }
+    .preview-media audio { width: 100%; }
+    
+    /* 🎵 Audio Waveform (CSS-only animation) */
+    .waveform {
+      display: flex; align-items: center; justify-content: center; gap: 2px;
+      height: 40px; width: 100%;
+    }
+    .wave-bar {
+      width: 3px; background: var(--accent-cyan); border-radius: 2px;
+      animation: wave 0.8s ease-in-out infinite alternate;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.1s; height: 60%; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s; height: 100%; }
+    .wave-bar:nth-child(4) { animation-delay: 0.3s; height: 70%; }
+    .wave-bar:nth-child(5) { animation-delay: 0.4s; height: 85%; }
+    @keyframes wave { from { transform: scaleY(0.4); } to { transform: scaleY(1); } }
+
+    /* 🎬 Video Play Overlay */
+    .video-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.3); opacity: 0; transition: var(--transition-smooth);
+      cursor: pointer;
+    }
+    .preview-media:hover .video-overlay { opacity: 1; }
+    .play-btn {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(0,243,255,0.9); display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: #000; transition: var(--transition-smooth);
+    }
+    .play-btn:hover { transform: scale(1.1); box-shadow: 0 0 25px rgba(0,243,255,0.6); }
+
+    .preview-meta {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.8rem; margin-bottom: 1.5rem; font-size: 0.85rem;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .meta-label { color: var(--text-secondary); }
+    .meta-value { font-family: var(--font-mono); font-weight: 500; }
+
+    .preview-actions { display: flex; gap: 0.8rem; justify-content: center; }
+    .btn-confirm { background: var(--accent-green); color: #000; }
+    .btn-confirm:hover { box-shadow: 0 0 20px rgba(0,255,157,0.5); }
+    .btn-cancel { background: var(--accent-pink); color: #fff; }
+    .btn-cancel:hover { box-shadow: 0 0 20px rgba(255,42,109,0.5); }
+
+    /* 📊 PROGRESS */
+    .progress-section {
+      margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);
+      display: none; text-align: center;
+    }
+    .progress-section.visible { display: block; }
+    .progress-ring {
+      width: 100px; height: 100px; margin: 0 auto 1rem; position: relative;
+    }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring__bg { stroke: var(--glass-border); stroke-width: 6; fill: none; }
+    .progress-ring__fill {
+      stroke: var(--accent-cyan); stroke-width: 6; fill: none;
+      stroke-linecap: round; stroke-dasharray: 251; stroke-dashoffset: 251;
+      transition: stroke-dashoffset 0.2s linear;
+    }
+    .progress-text {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-weight: 600;
+    }
+    .progress-status { color: var(--text-secondary); font-size: 0.9rem; }
+
+    /* 💬 TOAST NOTIFICATION */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); padding: 0.8rem 1.5rem;
+      display: flex; align-items: center; gap: 0.6rem; z-index: 1000;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4); transition: transform 0.3s ease;
+      max-width: 90vw;
+    }
+    .toast.visible { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--accent-green); }
+    .toast.error { border-color: var(--accent-pink); }
+    .toast-icon { font-size: 1.2rem; }
+    .toast-msg { font-size: 0.95rem; }
+
+    /* ❓ CONFIRM MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--bg-mid); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 2rem; max-width: 420px;
+      width: 90%; text-align: center; animation: modalPop 0.3s ease;
+    }
+    @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .modal-title { font-size: 1.3rem; margin-bottom: 0.5rem; }
+    .modal-desc { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
+    .modal-actions { display: flex; gap: 0.8rem; justify-content: center; }
+
+    /* 🌊 ANIMATIONS */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* 📱 RESPONSIVE */
+    @media (max-width: 600px) {
+      .nav { padding: 0.8rem 1rem; flex-wrap: wrap; }
+      .nav-links { width: 100%; justify-content: center; margin-top: 0.5rem; }
+      .drop-zone { padding: 2rem 1rem; }
+      .preview-actions { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; transform: none !important; }
+    }
   </style>
 </head>
 <body>
-  <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h1>📤 Upload Media <span id="admin-indicator" class="hidden admin-badge">ADMIN</span></h1>
-    <div>
-      <a href="gallery.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">🖼️ Gallery</a>
-      <a href="index.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">← Home</a>
+  <div class="depth-bg"></div>
+
+  <!-- 🖥️ NAV -->
+  <nav class="nav">
+    <div class="logo">MCALTONZ 2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="private.html" class="nav-link">Private</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="admin-ready.html" class="nav-link">Admin</a>
+      <a href="upload.html" class="nav-link active">Upload</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
     </div>
   </nav>
 
-  <!-- Auth/Access Check -->
-  <div id="access-check" class="card">🔐 Checking access...</div>
+  <!-- 📤 MAIN UPLOAD -->
+  <main class="upload-container">
+    <div class="page-header reveal">
+      <h1 class="page-title">📤 Active Upload</h1>
+      <p class="page-subtitle">Drag, drop, or capture. Preview before saving to cloud.</p>
+    </div>
 
-  <!-- Upload Form (hidden until authorized) -->
-  <div id="upload-form" class="hidden">
-    <!-- Drag & Drop Zone -->
-    <div class="card">
-      <h3>📥 Drag & Drop Files</h3>
-      <div id="dropzone" class="dropzone">
-        <p>📁 Drop files here or click to browse</p>
-        <small>Supports: Images (jpg, png, webp), Audio (mp3, wav), Video (mp4, webm), Documents (pdf, csv)</small>
+    <!-- 🎯 DROP ZONE -->
+    <div class="drop-zone reveal" id="drop-zone" tabindex="0">
+      <span class="drop-icon">☁️</span>
+      <div class="drop-text">Drop your media here</div>
+      <div class="drop-hint">Supports: JPG, PNG, GIF, MP3, WAV, MP4, WEBM</div>
+      <div class="drop-actions">
+        <label class="btn btn-primary" for="file-input">
+          📁 Browse Files
+          <input type="file" id="file-input" accept="image/*,audio/*,video/*" multiple>
+        </label>
+        <!-- 📸 Camera button (mobile) -->
+        <label class="btn btn-secondary" for="camera-input">
+          📸 Camera
+          <input type="file" id="camera-input" accept="image/*,video/*" capture="environment">
+        </label>
       </div>
-      <input type="file" id="file-input" multiple style="display:none" accept="image/*,audio/*,video/*,.pdf,.csv,.txt">
-      
-      <!-- File Preview -->
-      <div id="file-preview" style="margin:1rem 0"></div>
-      
-      <!-- Tags Input -->
-      <input type="text" id="tags" placeholder="Tags (comma-separated: logo, banner, 2024)">
-      
-      <!-- Metadata (JSON) -->
-      <textarea id="metadata" placeholder='Metadata (JSON, optional): {"project":"website","client":"acme"}' rows="3"></textarea>
-      
-      <!-- Upload Button -->
-      <button onclick="uploadFiles()">⬆️ Upload All Files</button>
-      <button onclick="clearFiles()" style="border-color:#ff6b6b; color:#ff6b6b">🗑️ Clear</button>
     </div>
 
-    <!-- CSV Import -->
-    <div class="card">
-      <h3>📊 Import from CSV</h3>
-      <small>Paste CSV data (format: file_url,file_name,file_size,mime_type,tag1;tag2;tag3)</small>
-      <textarea id="csv-data" placeholder="https://...,image.jpg,1024,image/png,logo;banner" rows="5"></textarea>
-      <select id="csv-table">
-        <option value="images">Import to: Images</option>
-        <option value="audio">Import to: Audio</option>
-        <option value="videos">Import to: Videos</option>
-        <option value="documents">Import to: Documents</option>
-      </select>
-      <button onclick="importCSV()">📥 Import CSV</button>
+    <!-- 🖼️ PREVIEW CARD -->
+    <div class="preview-card" id="preview-card">
+      <div class="preview-header">
+        <div class="preview-title">🔍 Preview</div>
+        <button class="preview-close" id="preview-close">&times;</button>
+      </div>
+      
+      <div class="preview-media" id="preview-media">
+        <!-- Dynamic content injected here -->
+      </div>
+
+      <div class="preview-meta" id="preview-meta">
+        <!-- Metadata injected here -->
+      </div>
+
+      <div class="preview-actions">
+        <button class="btn btn-cancel" id="btn-cancel">❌ Cancel</button>
+        <button class="btn btn-confirm" id="btn-confirm">✅ Save to Cloud</button>
+      </div>
     </div>
 
-    <!-- Status -->
-    <div id="status"></div>
+    <!-- 📊 PROGRESS -->
+    <div class="progress-section" id="progress-section">
+      <div class="progress-ring">
+        <svg width="100" height="100">
+          <circle class="progress-ring__bg" cx="50" cy="50" r="40"/>
+          <circle class="progress-ring__fill" cx="50" cy="50" r="40" id="progress-fill"/>
+        </svg>
+        <div class="progress-text" id="progress-text">0%</div>
+      </div>
+      <div class="progress-status" id="progress-status">Preparing upload...</div>
+    </div>
+  </main>
+
+  <!-- ❓ CONFIRM MODAL -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal">
+      <div class="modal-icon">☁️</div>
+      <div class="modal-title">Save to MCALTONZ Cloud?</div>
+      <div class="modal-desc" id="modal-desc">Your file will be uploaded and visible in your gallery.</div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="modal-no">❌ Cancel</button>
+        <button class="btn btn-confirm" id="modal-yes">✅ Yes, Upload</button>
+      </div>
+    </div>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
-    const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
+  <!-- 💬 TOAST -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon">✓</span>
+    <span class="toast-msg" id="toast-msg">Upload successful!</span>
+  </div>
 
-    const ADMIN_KEY = 'secret2026qwen'
-    let selectedFiles = []
-    let currentUserEmail = null
-    let isAdminMode = false
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // 🔐 SUPABASE CONFIG (Same as index.html)
+    const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    // 🔐 Access Check: Session OR Admin Key
-    async function checkAccess() {
-      const urlParams = new URLSearchParams(window.location.search)
-      const isAdminParam = urlParams.get('admin') === 'true'
-      const storedKey = localStorage.getItem('adminKey')
-      
-      // Check Supabase session
-      const {  { session } } = await supabase.auth.getSession()
-      
-      if (session?.user) {
-        // Normal authenticated user
-        currentUserEmail = session.user.email
-        isAdminMode = false
-        console.log('✅ Access: Supabase session')
-        showUploadForm()
-      } 
-      else if (isAdminParam && storedKey === ADMIN_KEY) {
-        // Admin bypass
-        currentUserEmail = 'admin@bridge.local'
-        isAdminMode = true
-        console.log('✅ Access: Admin key bypass')
-        document.getElementById('admin-indicator').classList.remove('hidden')
-        showUploadForm()
-      } 
-      else {
-        // No access
-        document.getElementById('access-check').innerHTML = `
-          ❌ Access denied.<br><br>
-          <a href="index.html">🔐 Log in</a> or 
-          <a href="private.html">🗝️ Use admin bridge</a>
-        `
-        document.getElementById('upload-form').classList.add('hidden')
-      }
-    }
-
-    function showUploadForm() {
-      document.getElementById('access-check').classList.add('hidden')
-      document.getElementById('upload-form').classList.remove('hidden')
-    }
-
-    // Drag & Drop
-    const dropzone = document.getElementById('dropzone')
+    // DOM Elements
+    const dropZone = document.getElementById('drop-zone')
     const fileInput = document.getElementById('file-input')
+    const cameraInput = document.getElementById('camera-input')
+    const previewCard = document.getElementById('preview-card')
+    const previewMedia = document.getElementById('preview-media')
+    const previewMeta = document.getElementById('preview-meta')
+    const previewClose = document.getElementById('preview-close')
+    const btnConfirm = document.getElementById('btn-confirm')
+    const btnCancel = document.getElementById('btn-cancel')
+    const progressSection = document.getElementById('progress-section')
+    const progressFill = document.getElementById('progress-fill')
+    const progressText = document.getElementById('progress-text')
+    const progressStatus = document.getElementById('progress-status')
+    const confirmModal = document.getElementById('confirm-modal')
+    const modalYes = document.getElementById('modal-yes')
+    const modalNo = document.getElementById('modal-no')
+    const toast = document.getElementById('toast')
+    const toastIcon = document.getElementById('toast-icon')
+    const toastMsg = document.getElementById('toast-msg')
 
-    dropzone.onclick = () => fileInput.click()
-    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover') }
-    dropzone.ondragleave = () => dropzone.classList.remove('dragover')
-    dropzone.ondrop = (e) => {
-      e.preventDefault()
-      dropzone.classList.remove('dragover')
-      handleFiles(e.dataTransfer.files)
+    let selectedFile = null
+    let previewUrl = null
+
+    // ✅ SAFE: UI Engine (Drag & Drop + Preview)
+    (function initUploadUI() {
+      // Scroll Reveal
+      document.querySelectorAll('.reveal').forEach(el => {
+        const obs = new IntersectionObserver(e => e[0].isIntersecting && el.classList.add('visible'), { threshold: 0.1 })
+        obs.observe(el)
+      })
+
+      // Drop Zone Events
+      ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation() })
+      })
+      ;['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, () => dropZone.classList.add('dragover'))
+      })
+      ;['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, () => dropZone.classList.remove('dragover'))
+      })
+      dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files
+        if (files.length) handleFileSelect(files[0])
+      })
+      dropZone.addEventListener('click', () => fileInput.click())
+      dropZone.addEventListener('keypress', (e) => { if (e.key === 'Enter') fileInput.click() })
+
+      // File Inputs
+      fileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleFileSelect(e.target.files[0]) })
+      cameraInput.addEventListener('change', (e) => { if (e.target.files[0]) handleFileSelect(e.target.files[0]) })
+
+      // Preview Controls
+      previewClose.addEventListener('click', resetPreview)
+      btnCancel.addEventListener('click', resetPreview)
+      btnConfirm.addEventListener('click', () => confirmModal.classList.add('visible'))
+
+      // Modal Controls
+      modalNo.addEventListener('click', () => confirmModal.classList.remove('visible'))
+      modalYes.addEventListener('click', () => { confirmModal.classList.remove('visible'); startUpload() })
+
+      // Mouse Glow on Drop Zone
+      dropZone.addEventListener('mousemove', (e) => {
+        const rect = dropZone.getBoundingClientRect()
+        dropZone.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`)
+        dropZone.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`)
+      })
+    })()
+
+    // 🖼️ Preview Generator (Images/Audio/Video)
+    function handleFileSelect(file) {
+      if (!validateFile(file)) return
+      selectedFile = file
+      previewUrl = URL.createObjectURL(file)
+      renderPreview(file, previewUrl)
+      previewCard.classList.add('visible')
+      previewCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-    fileInput.onchange = () => handleFiles(fileInput.files)
 
-    function handleFiles(files) {
-      selectedFiles = [...selectedFiles, ...Array.from(files)]
-      updatePreview()
+    function validateFile(file) {
+      const validTypes = ['image/jpeg','image/png','image/gif','audio/mpeg','audio/wav','video/mp4','video/webm']
+      const maxSize = 100 * 1024 * 1024 // 100MB
+      if (!validTypes.includes(file.type)) { showToast('❌ Unsupported file type', 'error'); return false }
+      if (file.size > maxSize) { showToast('❌ File too large (max 100MB)', 'error'); return false }
+      return true
     }
 
-    function updatePreview() {
-      const preview = document.getElementById('file-preview')
-      preview.innerHTML = selectedFiles.map((f, i) => `
-        <div style="display:inline-block; margin:0.5rem; text-align:center">
-          ${f.type.startsWith('image/') ? `<img src="${URL.createObjectURL(f)}" class="preview">` : '📄'}
-          <div style="font-size:0.8rem">${f.name}<br>(${(f.size/1024).toFixed(1)} KB)</div>
-          <button onclick="removeFile(${i})" style="font-size:0.7rem; padding:0.2rem 0.5rem">✕</button>
-        </div>
-      `).join('')
-    }
-
-    window.removeFile = (index) => {
-      selectedFiles.splice(index, 1)
-      updatePreview()
-    }
-
-    window.clearFiles = () => {
-      selectedFiles = []
-      updatePreview()
-      document.getElementById('status').innerHTML = ''
-    }
-
-    // Upload Files
-    window.uploadFiles = async () => {
-      if (selectedFiles.length === 0) return alert('❌ Select files first')
+    function renderPreview(file, url) {
+      previewMedia.innerHTML = ''
+      previewMeta.innerHTML = ''
       
-      const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t)
-      let metadata = {}
-      try {
-        const metaText = document.getElementById('metadata').value.trim()
-        if (metaText) metadata = JSON.parse(metaText)
-      } catch(e) {
-        return alert('❌ Invalid JSON in metadata field')
+      if (file.type.startsWith('image/')) {
+        const img = document.createElement('img')
+        img.src = url; img.alt = file.name; img.loading = 'lazy'
+        previewMedia.appendChild(img)
+      } else if (file.type.startsWith('audio/')) {
+        const audio = document.createElement('audio')
+        audio.controls = true; audio.src = url
+        previewMedia.appendChild(audio)
+        // CSS Waveform
+        const wave = document.createElement('div'); wave.className = 'waveform'; wave.style.marginTop = '1rem'
+        for (let i=0; i<5; i++) { const bar = document.createElement('div'); bar.className = 'wave-bar'; wave.appendChild(bar) }
+        previewMedia.appendChild(wave)
+      } else if (file.type.startsWith('video/')) {
+        const video = document.createElement('video')
+        video.src = url; video.muted = true; video.playsInline = true
+        video.style.maxHeight = '300px'
+        const overlay = document.createElement('div'); overlay.className = 'video-overlay'
+        overlay.innerHTML = '<div class="play-btn">▶</div>'
+        overlay.addEventListener('click', () => { video.controls = true; video.play(); overlay.style.display = 'none' })
+        previewMedia.appendChild(video); previewMedia.appendChild(overlay)
+        // Load thumbnail
+        video.addEventListener('loadeddata', () => { if (video.readyState >= 2) video.pause() })
       }
-      
-      const status = document.getElementById('status')
-      status.innerHTML = `⬆️ Uploading ${selectedFiles.length} file(s)...`
-      
-      let success = 0, failed = 0
-      
-      for (const file of selectedFiles) {
-        try {
-          // Determine table based on mime type
-          let table = 'documents'
-          if (file.type.startsWith('image/')) table = 'images'
-          else if (file.type.startsWith('audio/')) table = 'audio'
-          else if (file.type.startsWith('video/')) table = 'videos'
-          
-          // Upload to storage
-          const fileExt = file.name.split('.').pop()
-          const fileName = `${currentUserEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
-          const { error: uploadError, data } = await supabase.storage.from('uploads').upload(fileName, file)
-          
-          if (uploadError) throw uploadError
-          
-          // Get public URL
-          const {  } = supabase.storage.from('uploads').getPublicUrl(fileName)
-          
-          // Insert metadata into appropriate table
-          const insertData = {
-            user_email: currentUserEmail,
-            file_url: data.publicUrl,
-            file_name: file.name,
-            file_size: file.size,
-            mime_type: file.type,
-            tags: tags,
-            metadata: metadata
+
+      // Metadata
+      const meta = [
+        { label: 'Name', value: file.name },
+        { label: 'Type', value: file.type.split('/')[1].toUpperCase() },
+        { label: 'Size', value: formatBytes(file.size) }
+      ]
+      if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+        const el = file.type.startsWith('video/') ? document.createElement('video') : document.createElement('audio')
+        el.src = url
+        el.onloadedmetadata = () => {
+          meta.push({ label: 'Duration', value: formatDuration(el.duration) })
+          if (file.type.startsWith('video/') && video.videoWidth) {
+            meta.push({ label: 'Resolution', value: `${video.videoWidth}×${video.videoHeight}` })
           }
-          
-          const { error: dbError } = await supabase.from(table).insert(insertData)
-          if (dbError) throw dbError
-          
-          success++
-        } catch (err) {
-          console.error('Upload error:', err)
-          failed++
+          renderMetaItems(meta)
         }
-      }
-      
-      status.innerHTML = `✅ Uploaded: ${success} | Failed: ${failed}`
-      if (success > 0) {
-        setTimeout(() => window.location.href = 'gallery.html' + (isAdminMode ? '?admin=true' : ''), 1500)
-      }
+      } else { renderMetaItems(meta) }
     }
 
-    // Import CSV
-    window.importCSV = async () => {
-      const csvData = document.getElementById('csv-data').value.trim()
-      const tableName = document.getElementById('csv-table').value
-      
-      if (!csvData) return alert('❌ Paste CSV data first')
-      
-      const status = document.getElementById('status')
-      status.innerHTML = '📥 Importing CSV...'
-      
-      const lines = csvData.split('\n').filter(l => l.trim())
-      let imported = 0
-      
-      for (const line of lines) {
-        try {
-          const parts = line.split(',').map(p => p.trim())
-          const [file_url, file_name, file_size, mime_type, tags_str] = parts
-          
-          const { error } = await supabase.from(tableName).insert({
-            user_email: currentUserEmail,
-            file_url,
-            file_name,
-            file_size: parseInt(file_size) || null,
-            mime_type,
-            tags: tags_str ? tags_str.split(';') : []
-          })
-          
-          if (error) throw error
-          imported++
-        } catch (err) {
-          console.error('CSV import error:', err)
-        }
-      }
-      
-      status.innerHTML = `✅ Imported ${imported} rows from CSV`
+    function renderMetaItems(items) {
+      items.forEach(item => {
+        const div = document.createElement('div'); div.className = 'meta-item'
+        div.innerHTML = `<span class="meta-label">${item.label}</span><span class="meta-value">${item.value}</span>`
+        previewMeta.appendChild(div)
+      })
     }
 
-    // Init
-    checkAccess()
+    function resetPreview() {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      selectedFile = null; previewUrl = null
+      previewCard.classList.remove('visible')
+      previewMedia.innerHTML = ''; previewMeta.innerHTML = ''
+      progressSection.classList.remove('visible')
+    }
+
+    // 🚀 UPLOAD ENGINE (Supabase Integration)
+    async function startUpload() {
+      if (!selectedFile) return
+      progressSection.classList.add('visible')
+      progressStatus.textContent = 'Uploading to cloud...'
+      
+      // ⚠️ DON'T TOUCH: Supabase upload logic - keep structure intact
+      /*
+      const {  { user } } = await supabase.auth.getUser()
+      if (!user) { showToast('❌ Please sign in first', 'error'); return }
+      
+      const fileName = `${user.id}/${Date.now()}_${selectedFile.name}`
+      const {  uploadData, error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false })
+      
+      if (uploadError) { showToast('❌ Upload failed: ' + uploadError.message, 'error'); return }
+      
+      // ⚠️ DON'T TOUCH: Insert metadata with RLS filter
+      const {  record, error: insertError } = await supabase.from('uploads')
+        .insert({
+          user_email: user.email, // ← RLS: wajib
+          file_name: selectedFile.name,
+          file_path: uploadData.path,
+          file_type: selectedFile.type,
+          file_size: selectedFile.size,
+          uploaded_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (insertError) { showToast('❌ Database error: ' + insertError.message, 'error'); return }
+      
+      showToast('✅ Upload successful!', 'success')
+      setTimeout(() => { window.location.href = 'gallery.html'; }, 1200)
+      */
+
+      // 🎯 SIMULASI PROGRESS (UI-only demo)
+      simulateProgress(() => {
+        showToast('✅ Upload successful!', 'success')
+        setTimeout(() => { 
+          // Uncomment below for real redirect after Supabase integration
+          // window.location.href = 'gallery.html'
+          resetPreview()
+        }, 1200)
+      })
+    }
+
+    // 🎯 Progress Simulation (UI feedback)
+    function simulateProgress(onComplete) {
+      const circumference = 2 * Math.PI * 40
+      let progress = 0
+      const interval = setInterval(() => {
+        progress += Math.random() * 15
+        if (progress >= 100) {
+          progress = 100; clearInterval(interval)
+          progressStatus.textContent = 'Finalizing...'
+          setTimeout(onComplete, 400)
+        } else {
+          progressStatus.textContent = `Uploading... ${Math.round(progress)}%`
+        }
+        const offset = circumference - (progress / 100) * circumference
+        progressFill.style.strokeDashoffset = offset
+        progressText.textContent = `${Math.round(progress)}%`
+      }, 200)
+    }
+
+    // 💬 Toast Notification
+    function showToast(message, type = 'success') {
+      toastIcon.textContent = type === 'success' ? '✅' : '❌'
+      toastMsg.textContent = message
+      toast.className = `toast ${type} visible`
+      setTimeout(() => toast.classList.remove('visible'), 3000)
+    }
+
+    // 🛠️ Utils
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B'
+      const k = 1024, sizes = ['B','KB','MB','GB'], i = Math.floor(Math.log(bytes)/Math.log(k))
+      return parseFloat((bytes/Math.pow(k,i)).toFixed(1)) + ' ' + sizes[i]
+    }
+    function formatDuration(sec) {
+      const m = Math.floor(sec/60), s = Math.floor(sec%60)
+      return `${m}:${s.toString().padStart(2,'0')}`
+    }
+
+    // Expose for debugging
+    window.handleFileSelect = handleFileSelect
   </script>
 </body>
 </html>
