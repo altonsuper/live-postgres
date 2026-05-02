@@ -5,37 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🖼️ Gallery - MCALTONZ 2026</title>
   <style>
-    :root { --bg:#040508; --accent:#00ced1; --glass:rgba(255,255,255,0.04); --border:rgba(0,206,209,0.15); --text:#e8f0ff; --sec:#8a9ab0; --admin:#ff6b9d; }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; min-height:100vh; padding:2rem; }
-    .nav { display:flex; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
-    .nav a, .nav button { padding:0.5rem 1rem; background:var(--glass); border:1px solid var(--border); border-radius:6px; color:var(--text); text-decoration:none; cursor:pointer; }
-    .nav button { background:transparent; }
-    .nav button:hover { border-color:var(--admin); color:var(--admin); }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:1rem; }
-    .card { background:var(--glass); border:1px solid var(--border); border-radius:12px; overflow:hidden; position:relative; }
-    .thumb { height:180px; background:#0a0c14; display:flex; align-items:center; justify-content:center; }
-    .thumb img, .thumb video { width:100%; height:100%; object-fit:cover; }
-    .info { padding:0.8rem; }
-    .name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .meta { color:var(--sec); font-size:0.8rem; margin-top:0.3rem; }
-    .actions { display:flex; gap:0.5rem; margin-top:0.5rem; }
-    .actions a, .actions button { flex:1; padding:0.4rem; background:rgba(0,206,209,0.1); border:1px solid var(--border); border-radius:4px; color:var(--text); text-decoration:none; text-align:center; font-size:0.8rem; cursor:pointer; }
-    .actions button.delete { background:rgba(255,107,157,0.1); border-color:var(--admin); color:var(--admin); }
-    .empty { grid-column:1/-1; text-align:center; padding:3rem; color:var(--sec); }
-    .admin-badge { position:absolute; top:0.5rem; right:0.5rem; background:var(--admin); color:#fff; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.7rem; }
+    :root{--bg:#040508;--accent:#00ced1;--glass:rgba(255,255,255,0.04);--border:rgba(0,206,209,0.15);--text:#e8f0ff;--sec:#8a9ab0}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh;padding:2rem}
+    .nav{display:flex;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+    .nav a{padding:0.5rem 1rem;background:var(--glass);border:1px solid var(--border);border-radius:6px;color:var(--text);text-decoration:none}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem}
+    .card{background:var(--glass);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .thumb{height:180px;background:#0a0c14;display:flex;align-items:center;justify-content:center}
+    .thumb img,.thumb video{width:100%;height:100%;object-fit:cover}
+    .info{padding:0.8rem}
+    .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .meta{color:var(--sec);font-size:0.8rem;margin-top:0.3rem}
+    .actions{display:flex;gap:0.5rem;margin-top:0.5rem}
+    .actions a{flex:1;padding:0.4rem;background:rgba(0,206,209,0.1);border:1px solid var(--border);border-radius:4px;color:var(--text);text-decoration:none;text-align:center;font-size:0.8rem}
+    .empty{grid-column:1/-1;text-align:center;padding:3rem;color:var(--sec)}
   </style>
 </head>
 <body>
   <div class="nav">
     <h2>🖼️ Gallery</h2>
-    <div>
-      <a href="upload.html">📤 Upload</a>
-      <button id="signOutBtn">🚪 Logout</button>
-    </div>
+    <a href="upload.html">📤 Upload More</a>
   </div>
-  <p id="who" style="color:var(--sec); margin-bottom:1rem;"></p>
-  <p id="msg" style="color:var(--admin); margin-bottom:1rem;"></p>
   <div class="grid" id="grid"><div class="empty">🔄 Loading...</div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -44,95 +35,36 @@
     const SUPABASE_ANON_KEY = "sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const grid = document.getElementById('grid');
-    const who = document.getElementById('who');
-    const msg = document.getElementById('msg');
-    const ADMIN_EMAIL = 'altonsuper@gmail.com';
 
-    document.getElementById('signOutBtn').addEventListener('click', async () => {
-      await supabase.auth.signOut(); window.location.href = 'index.html';
-    });
-
-    async function guard() {
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) { window.location.href = 'index.html'; return null; }
-      return data.session;
-    }
-
-    async function main() {
-      const session = await guard(); if (!session) return;
-      const isAdmin = session.user.email === ADMIN_EMAIL;
+    async function loadGallery() {
+      // Fetch ALL uploads (public read)
+      const { data, error } = await supabase.from('uploads').select('*').order('uploaded_at', { ascending: false });
       
-      who.textContent = `Logged in as: ${session.user.email}${isAdmin ? ' 👑 ADMIN' : ''}`;
-
-      // Fetch from DB (RLS handles filtering)
-      const { data, error } = await supabase.from('uploads')
-        .select('*')
-        .order('uploaded_at', { ascending: false });
-
-      if (error) { msg.textContent = '❌ ' + error.message; return; }
+      if (error) { grid.innerHTML = `<div class="empty">❌ ${error.message}</div>`; return; }
       if (!data?.length) { grid.innerHTML = '<div class="empty">📭 No files yet. <a href="upload.html" style="color:var(--accent)">Upload now</a></div>'; return; }
 
       grid.innerHTML = data.map(f => {
         const isImg = f.file_type?.startsWith('image/');
         const isVid = f.file_type?.startsWith('video/');
-        const isAud = f.file_type?.startsWith('audio/');
-        const isHtml = f.file_name?.toLowerCase().endsWith('.html');
+        const thumb = isImg ? `<img src="${f.file_path}" loading="lazy">` : 
+                      isVid ? `<video src="${f.file_path}" muted></video>` : 
+                      `<div style="height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2)">📄 ${f.file_name.split('.').pop().toUpperCase()}</div>`;
         
-        let thumb = '';
-        if (isImg) thumb = `<img src="${f.file_path}" loading="lazy">`;
-        else if (isVid) thumb = `<video src="${f.file_path}" muted></video>`;
-        else if (isAud) thumb = `<div style="height:100%; display:flex; align-items:center; justify-content:center">🎵 Audio</div>`;
-        else thumb = `<div style="height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.2)">${isHtml ? '🌐' : '📄'} ${f.file_name.split('.').pop().toUpperCase()}</div>`;
-
         return `
           <div class="card">
-            ${isAdmin ? '<span class="admin-badge">👑 Admin</span>' : ''}
             <div class="thumb">${thumb}</div>
             <div class="info">
               <div class="name" title="${f.file_name}">${f.file_name}</div>
               <div class="meta">${(f.file_size/1024).toFixed(1)} KB • ${new Date(f.uploaded_at).toLocaleDateString()}</div>
               <div class="actions">
                 <a href="${f.file_path}" target="_blank" download="${f.file_name}">💾 Download</a>
-                ${isAdmin || f.user_email === session.user.email ? `<button class="delete" data-id="${f.id}" data-path="${f.file_path}">🗑️ Delete</button>` : ''}
               </div>
             </div>
           </div>`;
       }).join('');
-
-      // Delete handlers
-      document.querySelectorAll('.actions .delete').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.currentTarget.dataset.id;
-          const path = e.currentTarget.dataset.path;
-          if (!confirm('🗑️ Delete this file permanently?')) return;
-          
-          try {
-            // Delete from Storage (extract path from signed URL)
-            const pathFromUrl = path.split('?')[0].replace(/.*\/user-uploads\//, '');
-            await supabase.storage.from('user-uploads').remove([pathFromUrl]);
-            
-            // Delete from DB
-            await supabase.from('uploads').delete().eq('id', id);
-            
-            // Refresh
-            showToast('✅ Deleted');
-            setTimeout(() => window.location.reload(), 800);
-          } catch (err) {
-            showToast('❌ ' + err.message);
-          }
-        });
-      });
     }
 
-    function showToast(msg) {
-      const t = document.createElement('div');
-      t.style.cssText = 'position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); padding:0.8rem 1.5rem; background:rgba(255,255,255,0.04); border:1px solid rgba(0,206,209,0.15); border-radius:8px; z-index:999; animation:up 0.3s';
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 3000);
-    }
-
-    main();
+    loadGallery();
   </script>
 </body>
 </html>
