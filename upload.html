@@ -34,7 +34,7 @@
       font-weight: 600; cursor: pointer;
     }
     .preview { margin-top: 1.5rem; padding: 1rem; background: var(--glass-bg); border-radius: var(--radius-md); }
-    .preview img { max-width: 100%; max-height: 300px; border-radius: var(--radius-md); }
+    .preview img, .preview video, .preview audio { max-width: 100%; margin-bottom: 0.5rem; }
     .progress { margin-top: 1rem; text-align: center; display: none; }
     .progress.visible { display: block; }
     .progress-bar {
@@ -51,9 +51,10 @@
       border: 1px solid var(--glass-border); border-radius: var(--radius-md);
       display: none; z-index: 1000;
     }
-    .toast.show { display: block; }
+    .toast.show { display: block; animation: slideUp 0.3s ease; }
     .toast.error { border-color: #ff6b9d; }
     .toast.success { border-color: var(--accent-primary); }
+    @keyframes slideUp { from { transform: translateX(-50%) translateY(100px); } to { transform: translateX(-50%) translateY(0); } }
   </style>
 </head>
 <body>
@@ -100,7 +101,6 @@
     const toast = document.getElementById('toast')
 
     let selectedFile = null
-    let previewUrl = null
 
     // Drop Zone Events
     dropZone.onclick = () => fileInput.click()
@@ -116,48 +116,52 @@
     // Handle File
     function handleFile(file) {
       selectedFile = file
-      previewUrl = URL.createObjectURL(file)
+      const url = URL.createObjectURL(file)
       
       if (file.type.startsWith('image/')) {
-        previewContent.innerHTML = `<img src="${previewUrl}" alt="${file.name}">`
+        previewContent.innerHTML = `<img src="${url}" alt="${file.name}"><p>${file.name} • ${(file.size/1024).toFixed(1)} KB</p>`
       } else if (file.type.startsWith('video/')) {
-        previewContent.innerHTML = `<video src="${previewUrl}" controls style="max-width:100%"></video>`
+        previewContent.innerHTML = `<video src="${url}" controls></video><p>${file.name} • ${(file.size/1024/1024).toFixed(2)} MB</p>`
       } else if (file.type.startsWith('audio/')) {
-        previewContent.innerHTML = `<audio src="${previewUrl}" controls style="width:100%"></audio>`
+        previewContent.innerHTML = `<audio src="${url}" controls style="width:100%"></audio><p>${file.name} • ${(file.size/1024/1024).toFixed(2)} MB</p>`
       }
       
-      previewContent.innerHTML += `<p style="margin-top:0.5rem; color:var(--text-secondary); font-size:0.9rem">${file.name} • ${(file.size/1024).toFixed(1)} KB</p>`
       preview.style.display = 'block'
     }
 
     // Upload Button
     uploadBtn.onclick = async () => {
       if (!selectedFile) return
-      if (!await checkAuth()) return
+      
+      // Check auth
+      const {  { session } } = await supabase.auth.getSession()
+      if (!session) {
+        showToast('❌ Please login first', 'error')
+        setTimeout(() => window.location.href = 'index.html', 1500)
+        return
+      }
       
       progress.classList.add('visible')
       uploadBtn.disabled = true
       
       try {
-        // Get user email
-        const {  { user } } = await supabase.auth.getUser()
-        const userEmail = user.email.replace(/[^a-zA-Z0-9]/g, '_')
-        
-        // Upload to Storage
+        const userEmail = session.user.email.replace(/[^a-zA-Z0-9]/g, '_')
         const fileExt = selectedFile.name.split('.').pop()
         const fileName = `${userEmail}/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`
         
+        // Upload to Storage
         const {  uploadData, error: uploadError } = await supabase.storage
           .from('uploads')
           .upload(fileName, selectedFile, { cacheControl: '3600' })
         
         if (uploadError) throw uploadError
         
-        // Save to Database
+        // Get public URL
         const {  } = supabase.storage.from('uploads').getPublicUrl(fileName)
         
+        // Save to Database
         const { error: dbError } = await supabase.from('uploads').insert({
-          user_email: user.email,
+          user_email: session.user.email,
           file_name: selectedFile.name,
           file_path: publicUrl,
           file_type: selectedFile.type,
@@ -166,8 +170,19 @@
         
         if (dbError) throw dbError
         
-        showToast('✅ Upload successful!', 'success')
-        setTimeout(() => window.location.href = 'gallery.html', 1500)
+        // Simulate progress
+        let p = 0
+        const interval = setInterval(() => {
+          p += 15
+          progressFill.style.width = p + '%'
+          progressText.textContent = `Uploading... ${p}%`
+          
+          if (p >= 100) {
+            clearInterval(interval)
+            showToast('✅ Upload successful!', 'success')
+            setTimeout(() => window.location.href = 'gallery.html', 1500)
+          }
+        }, 150)
         
       } catch (err) {
         console.error('Upload error:', err)
@@ -175,17 +190,6 @@
         progress.classList.remove('visible')
         uploadBtn.disabled = false
       }
-    }
-
-    // Check Auth
-    async function checkAuth() {
-      const {  { session } } = await supabase.auth.getSession()
-      if (!session) {
-        showToast('❌ Please login first', 'error')
-        setTimeout(() => window.location.href = 'index.html', 1500)
-        return false
-      }
-      return true
     }
 
     // Toast
