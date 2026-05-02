@@ -17,21 +17,22 @@
     #status { margin:1rem 0; padding:1rem; background:#0a0a0f; border-radius:4px; min-height:50px; }
     a { color:#00ff9d; text-decoration:none; }
     a:hover { text-decoration:underline; }
+    .admin-badge { background:#00ff9d; color:#0a0a0f; padding:0.2rem 0.5rem; border-radius:2px; font-size:0.8rem; font-weight:bold; }
   </style>
 </head>
 <body>
   <nav style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h1>📤 Upload Media</h1>
+    <h1>📤 Upload Media <span id="admin-indicator" class="hidden admin-badge">ADMIN</span></h1>
     <div>
-      <a href="gallery.html" class="btn" style="padding:0.5rem 1rem; border:1px solid #00ff9d">🖼️ Gallery</a>
-      <a href="index.html" class="btn" style="padding:0.5rem 1rem; border:1px solid #00ff9d">← Home</a>
+      <a href="gallery.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">🖼️ Gallery</a>
+      <a href="index.html" style="padding:0.5rem 1rem; border:1px solid #00ff9d; border-radius:4px">← Home</a>
     </div>
   </nav>
 
-  <!-- Auth Check -->
-  <div id="auth-check" class="card">🔐 Checking authentication...</div>
+  <!-- Auth/Access Check -->
+  <div id="access-check" class="card">🔐 Checking access...</div>
 
-  <!-- Upload Form (hidden until logged in) -->
+  <!-- Upload Form (hidden until authorized) -->
   <div id="upload-form" class="hidden">
     <!-- Drag & Drop Zone -->
     <div class="card">
@@ -78,14 +79,48 @@
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
     const supabase = createClient('https://zmtudgbebtnoiysebeli.supabase.co', 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8')
 
+    const ADMIN_KEY = 'secret2026qwen'
     let selectedFiles = []
+    let currentUserEmail = null
+    let isAdminMode = false
 
-    // Auth Check
-    const {  { session } } = await supabase.auth.getSession()
-    if (!session) {
-      document.getElementById('auth-check').innerHTML = '❌ Please <a href="index.html">log in</a> first'
-    } else {
-      document.getElementById('auth-check').classList.add('hidden')
+    // 🔐 Access Check: Session OR Admin Key
+    async function checkAccess() {
+      const urlParams = new URLSearchParams(window.location.search)
+      const isAdminParam = urlParams.get('admin') === 'true'
+      const storedKey = localStorage.getItem('adminKey')
+      
+      // Check Supabase session
+      const {  { session } } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        // Normal authenticated user
+        currentUserEmail = session.user.email
+        isAdminMode = false
+        console.log('✅ Access: Supabase session')
+        showUploadForm()
+      } 
+      else if (isAdminParam && storedKey === ADMIN_KEY) {
+        // Admin bypass
+        currentUserEmail = 'admin@bridge.local'
+        isAdminMode = true
+        console.log('✅ Access: Admin key bypass')
+        document.getElementById('admin-indicator').classList.remove('hidden')
+        showUploadForm()
+      } 
+      else {
+        // No access
+        document.getElementById('access-check').innerHTML = `
+          ❌ Access denied.<br><br>
+          <a href="index.html">🔐 Log in</a> or 
+          <a href="private.html">🗝️ Use admin bridge</a>
+        `
+        document.getElementById('upload-form').classList.add('hidden')
+      }
+    }
+
+    function showUploadForm() {
+      document.getElementById('access-check').classList.add('hidden')
       document.getElementById('upload-form').classList.remove('hidden')
     }
 
@@ -146,7 +181,6 @@
       const status = document.getElementById('status')
       status.innerHTML = `⬆️ Uploading ${selectedFiles.length} file(s)...`
       
-      const user = (await supabase.auth.getUser()).data.user
       let success = 0, failed = 0
       
       for (const file of selectedFiles) {
@@ -159,7 +193,7 @@
           
           // Upload to storage
           const fileExt = file.name.split('.').pop()
-          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+          const fileName = `${currentUserEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
           const { error: uploadError, data } = await supabase.storage.from('uploads').upload(fileName, file)
           
           if (uploadError) throw uploadError
@@ -169,20 +203,13 @@
           
           // Insert metadata into appropriate table
           const insertData = {
-            user_email: user.email,
+            user_email: currentUserEmail,
             file_url: data.publicUrl,
             file_name: file.name,
             file_size: file.size,
             mime_type: file.type,
             tags: tags,
             metadata: metadata
-          }
-          
-          // Add type-specific fields
-          if (table === 'images') {
-            // Could extract width/height here with additional processing
-          } else if (table === 'videos' || table === 'audio') {
-            // Could extract duration here
           }
           
           const { error: dbError } = await supabase.from(table).insert(insertData)
@@ -197,7 +224,7 @@
       
       status.innerHTML = `✅ Uploaded: ${success} | Failed: ${failed}`
       if (success > 0) {
-        setTimeout(() => window.location.href = 'gallery.html', 1500)
+        setTimeout(() => window.location.href = 'gallery.html' + (isAdminMode ? '?admin=true' : ''), 1500)
       }
     }
 
@@ -211,7 +238,6 @@
       const status = document.getElementById('status')
       status.innerHTML = '📥 Importing CSV...'
       
-      const user = (await supabase.auth.getUser()).data.user
       const lines = csvData.split('\n').filter(l => l.trim())
       let imported = 0
       
@@ -221,7 +247,7 @@
           const [file_url, file_name, file_size, mime_type, tags_str] = parts
           
           const { error } = await supabase.from(tableName).insert({
-            user_email: user.email,
+            user_email: currentUserEmail,
             file_url,
             file_name,
             file_size: parseInt(file_size) || null,
@@ -238,6 +264,9 @@
       
       status.innerHTML = `✅ Imported ${imported} rows from CSV`
     }
+
+    // Init
+    checkAccess()
   </script>
 </body>
 </html>

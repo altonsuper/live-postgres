@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>👑 Admin Ready</title>
+  <style>
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:700px; margin:0 auto; text-align:center; }
+    .card { background:#1a1a2e; padding:1.5rem; margin:1rem 0; border-left:3px solid #00ff9d; border-radius:6px; text-align:left; }
+    .btn { display:inline-block; padding:1rem 2rem; margin:0.5rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; text-decoration:none; font-weight:bold; border-radius:4px; }
+    .btn:hover { background:#00ff9d; color:#0a0a0f; }
+    .status { font-size:1.2rem; margin:1rem 0; }
+    .key-display { background:#0a0a0f; padding:0.5rem; border-radius:4px; font-family:monospace; margin:0.5rem 0; }
+    small { color:#888; }
+  </style>
+</head>
+<body>
+  <h1>👑 Admin Ready</h1>
+  <p class="status">✅ You have admin access</p>
+  
+  <div class="card">
+    <h3>🔑 Your Admin Key</h3>
+    <div class="key-display">secret2026qwen</div>
+    <small>Keep this secret. Use in: <code>?key=secret2026qwen</code></small>
+  </div>
+  
+  <div class="card">
+    <h3>🚀 Quick Actions</h3>
+    <a href="upload.html?admin=true" class="btn">📤 Upload Media</a>
+    <a href="gallery.html?admin=true" class="btn">🖼️ View All Media</a>
+    <a href="index.html" class="btn">← Public Site</a>
+  </div>
+  
+  <div class="card">
+    <h3>💡 Tips</h3>
+    <ul style="text-align:left; margin:0.5rem 0 0 1.5rem">
+      <li>Normal users must log in via <code>index.html</code></li>
+      <li>Admin bypass: <code>private.html?key=secret2026qwen</code></li>
+      <li>Direct access: Add <code>?admin=true</code> to upload/gallery URLs</li>
+      <li>Admin sees ALL files; users see only their own (RLS)</li>
+    </ul>
+  </div>
+  
+  <p style="margin-top:2rem">
+    <small>Built with Supabase + Vercel + Local AI</small><br>
+    <small>Deployed: <span id="deploy-time"></span></small>
+  </p>
+
+  <script>
+    // Show deploy time
+    document.getElementById('deploy-time').textContent = new Date().toLocaleString()
+    
+    // Verify admin key in URL
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('key') !== 'secret2026qwen') {
+      // Redirect to private.html if accessed directly without key
+      // window.location.href = 'private.html'
+    }
+  </script>
+</body>
+</html>
