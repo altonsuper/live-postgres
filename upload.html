@@ -1,203 +1,137 @@
-<!DOCTYPE html>
-<html lang="id">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📤 Upload - MCALTONZ 2026</title>
   <style>
-    :root {
-      --bg-deep: #040508; --accent-primary: #00ced1;
-      --glass-bg: rgba(255,255,255,0.04); --glass-border: rgba(0,206,209,0.15);
-      --text-primary: #e8f0ff; --text-secondary: #8a9ab0;
-      --radius-lg: 18px; --radius-md: 10px;
-      --font-main: system-ui, -apple-system, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg-deep); color: var(--text-primary);
-      font-family: var(--font-main); min-height: 100vh; padding: 2rem;
-    }
-    .container { max-width: 600px; margin: 0 auto; }
-    h1 { text-align: center; margin-bottom: 2rem; color: var(--accent-primary); }
-    .drop-zone {
-      border: 2px dashed var(--glass-border); border-radius: var(--radius-lg);
-      padding: 3rem 2rem; text-align: center; background: var(--glass-bg);
-      cursor: pointer; transition: all 0.3s;
-    }
-    .drop-zone:hover { border-color: var(--accent-primary); }
-    .drop-zone.dragover { background: rgba(0,206,209,0.1); }
-    input[type="file"] { display: none; }
-    .btn {
-      padding: 0.8rem 1.5rem; margin-top: 1rem;
-      background: var(--accent-primary); color: #000;
-      border: none; border-radius: var(--radius-md);
-      font-weight: 600; cursor: pointer;
-    }
-    .preview { margin-top: 1.5rem; padding: 1rem; background: var(--glass-bg); border-radius: var(--radius-md); }
-    .preview img, .preview video, .preview audio { max-width: 100%; margin-bottom: 0.5rem; }
-    .progress { margin-top: 1rem; text-align: center; display: none; }
-    .progress.visible { display: block; }
-    .progress-bar {
-      width: 100%; height: 8px; background: var(--glass-bg);
-      border-radius: var(--radius-md); overflow: hidden; margin: 0.5rem 0;
-    }
-    .progress-fill {
-      height: 100%; background: var(--accent-primary);
-      width: 0%; transition: width 0.3s;
-    }
-    .toast {
-      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-      padding: 0.8rem 1.5rem; background: var(--glass-bg);
-      border: 1px solid var(--glass-border); border-radius: var(--radius-md);
-      display: none; z-index: 1000;
-    }
-    .toast.show { display: block; animation: slideUp 0.3s ease; }
-    .toast.error { border-color: #ff6b9d; }
-    .toast.success { border-color: var(--accent-primary); }
-    @keyframes slideUp { from { transform: translateX(-50%) translateY(100px); } to { transform: translateX(-50%) translateY(0); } }
+    :root { --bg:#040508; --accent:#00ced1; --glass:rgba(255,255,255,0.04); --border:rgba(0,206,209,0.15); --text:#e8f0ff; --sec:#8a9ab0; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; min-height:100vh; padding:2rem; }
+    .container { max-width:600px; margin:0 auto; }
+    h1 { text-align:center; color:var(--accent); margin-bottom:2rem; }
+    .drop { border:2px dashed var(--border); border-radius:18px; padding:3rem 2rem; text-align:center; background:var(--glass); cursor:pointer; }
+    .drop:hover { border-color:var(--accent); }
+    input[type="file"] { display:none; }
+    .preview { margin-top:1.5rem; padding:1rem; background:var(--glass); border-radius:12px; display:none; }
+    .preview img, .preview video, .preview audio { max-width:100%; margin-bottom:0.5rem; border-radius:8px; }
+    .btn { width:100%; padding:0.8rem; margin-top:1rem; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); padding:0.8rem 1.5rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; display:none; z-index:999; }
+    .toast.show { display:block; animation:up 0.3s; }
+    @keyframes up { from { transform:translateX(-50%) translateY(20px); } to { transform:translateX(-50%) translateY(0); } }
+    .warning-box { background:rgba(255,159,67,0.1); border:1px solid #ff9f43; border-radius:8px; padding:0.8rem; margin:0.5rem 0; font-size:0.9rem; color:#ff9f43; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>📤 Upload Media</h1>
-    
-    <div class="drop-zone" id="drop-zone">
-      <p>📁 Drop files here or click to browse</p>
-      <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem">Supports: JPG, PNG, MP4, WEBM, MP3</p>
-      <input type="file" id="file-input" accept="image/*,video/*,audio/*">
+    <div class="drop" onclick="document.getElementById('file').click()">
+      <p>📁 Tap to select or drop file</p>
+      <p style="color:var(--sec); font-size:0.9rem">Supports: JPG, PNG, MP4, WEBM, MP3, HTML, PDF</p>
+      <input type="file" id="file" accept="image/*,video/*,audio/*,.html,.pdf,.txt">
     </div>
-
-    <div class="preview" id="preview" style="display:none">
-      <h3 style="margin-bottom:0.5rem">Preview</h3>
-      <div id="preview-content"></div>
-      <button class="btn" id="upload-btn" style="width:100%; margin-top:1rem">✅ Upload to Cloud</button>
-    </div>
-
-    <div class="progress" id="progress">
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <p id="progress-text" style="color:var(--text-secondary); font-size:0.9rem">Uploading...</p>
+    <div class="preview" id="preview">
+      <div id="media"></div>
+      <p id="info" style="color:var(--sec); font-size:0.9rem; margin-top:0.5rem;"></p>
+      <div id="html-warning" class="warning-box" style="display:none">
+        ⚠️ <strong>HTML File Warning:</strong> This file can contain scripts. It will be stored securely but should only be downloaded & opened by trusted users.
+      </div>
+      <button class="btn" id="uploadBtn">✅ Upload to Cloud</button>
     </div>
   </div>
-
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 🔐 SUPABASE CONFIG
-    const supabase = window.supabase.createClient(
-      'https://zmtudgbebtnoiysebeli.supabase.co',
-      'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
-    )
+    const SUPABASE_URL = "https://zmtudgbebtnoiysebeli.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const fileInput = document.getElementById('file');
+    const preview = document.getElementById('preview');
+    const media = document.getElementById('media');
+    const info = document.getElementById('info');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const toast = document.getElementById('toast');
+    const htmlWarning = document.getElementById('html-warning');
+    let selectedFile = null;
 
-    // DOM Elements
-    const dropZone = document.getElementById('drop-zone')
-    const fileInput = document.getElementById('file-input')
-    const preview = document.getElementById('preview')
-    const previewContent = document.getElementById('preview-content')
-    const uploadBtn = document.getElementById('upload-btn')
-    const progress = document.getElementById('progress')
-    const progressFill = document.getElementById('progress-fill')
-    const progressText = document.getElementById('progress-text')
-    const toast = document.getElementById('toast')
-
-    let selectedFile = null
-
-    // Drop Zone Events
-    dropZone.onclick = () => fileInput.click()
-    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover') }
-    dropZone.ondragleave = () => dropZone.classList.remove('dragover')
-    dropZone.ondrop = (e) => {
-      e.preventDefault()
-      dropZone.classList.remove('dragover')
-      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
-    }
-    fileInput.onchange = (e) => { if (e.target.files[0]) handleFile(e.target.files[0]) }
-
-    // Handle File
-    function handleFile(file) {
-      selectedFile = file
-      const url = URL.createObjectURL(file)
-      
-      if (file.type.startsWith('image/')) {
-        previewContent.innerHTML = `<img src="${url}" alt="${file.name}"><p>${file.name} • ${(file.size/1024).toFixed(1)} KB</p>`
-      } else if (file.type.startsWith('video/')) {
-        previewContent.innerHTML = `<video src="${url}" controls></video><p>${file.name} • ${(file.size/1024/1024).toFixed(2)} MB</p>`
-      } else if (file.type.startsWith('audio/')) {
-        previewContent.innerHTML = `<audio src="${url}" controls style="width:100%"></audio><p>${file.name} • ${(file.size/1024/1024).toFixed(2)} MB</p>`
-      }
-      
-      preview.style.display = 'block'
+    async function guard() {
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session) { window.location.href = 'index.html'; return null; }
+      return data.session;
     }
 
-    // Upload Button
+    fileInput.onchange = (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      selectedFile = f;
+      const url = URL.createObjectURL(f);
+      
+      // Preview
+      if (f.type.startsWith('image/')) media.innerHTML = `<img src="${url}">`;
+      else if (f.type.startsWith('video/')) media.innerHTML = `<video src="${url}" controls></video>`;
+      else if (f.type.startsWith('audio/')) media.innerHTML = `<audio src="${url}" controls style="width:100%"></audio>`;
+      else media.innerHTML = `<div style="height:180px; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.2); border-radius:8px">📄 ${f.name.split('.').pop().toUpperCase()}</div>`;
+      
+      info.textContent = `${f.name} • ${(f.size/1024).toFixed(1)} KB`;
+      
+      // HTML warning
+      htmlWarning.style.display = f.name.toLowerCase().endsWith('.html') ? 'block' : 'none';
+      
+      preview.style.display = 'block';
+    };
+
     uploadBtn.onclick = async () => {
-      if (!selectedFile) return
+      if (!selectedFile) return;
+      const session = await guard(); if (!session) return;
       
-      // Check auth
-      const {  { session } } = await supabase.auth.getSession()
-      if (!session) {
-        showToast('❌ Please login first', 'error')
-        setTimeout(() => window.location.href = 'index.html', 1500)
-        return
+      // HTML confirmation
+      if (selectedFile.name.toLowerCase().endsWith('.html')) {
+        if (!confirm('⚠️ HTML files can contain scripts. Continue upload?')) return;
       }
       
-      progress.classList.add('visible')
-      uploadBtn.disabled = true
+      uploadBtn.disabled = true; uploadBtn.textContent = '⏳ Uploading...';
       
       try {
-        const userEmail = session.user.email.replace(/[^a-zA-Z0-9]/g, '_')
-        const fileExt = selectedFile.name.split('.').pop()
-        const fileName = `${userEmail}/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`
+        // Folder = email with @ replaced (for RLS)
+        const safeEmail = session.user.email.replace(/[^a-zA-Z0-9]/g, '_');
+        const ext = selectedFile.name.split('.').pop();
+        const path = `${safeEmail}/${Date.now()}.${ext}`;
         
         // Upload to Storage
-        const {  uploadData, error: uploadError } = await supabase.storage
-          .from('uploads')
-          .upload(fileName, selectedFile, { cacheControl: '3600' })
+        const { error: upErr } = await supabase.storage.from('user-uploads').upload(path, selectedFile, { contentType: selectedFile.type || 'application/octet-stream' });
+        if (upErr) throw upErr;
         
-        if (uploadError) throw uploadError
+        // Get public URL (signed for private bucket)
+        const { data: signed } = await supabase.storage.from('user-uploads').createSignedUrl(path, 60*60*24*7); // 7 days
+        if (!signed?.signedUrl) throw new Error('Failed to get download URL');
         
-        // Get public URL
-        const {  } = supabase.storage.from('uploads').getPublicUrl(fileName)
-        
-        // Save to Database
-        const { error: dbError } = await supabase.from('uploads').insert({
+        // Save metadata to DB
+        const { error: dbErr } = await supabase.from('uploads').insert({
           user_email: session.user.email,
+          user_id: session.user.id,
           file_name: selectedFile.name,
-          file_path: publicUrl,
-          file_type: selectedFile.type,
+          file_path: signed.signedUrl,
+          file_type: selectedFile.type || 'application/octet-stream',
           file_size: selectedFile.size
-        })
+        });
+        if (dbErr) throw dbErr;
         
-        if (dbError) throw dbError
-        
-        // Simulate progress
-        let p = 0
-        const interval = setInterval(() => {
-          p += 15
-          progressFill.style.width = p + '%'
-          progressText.textContent = `Uploading... ${p}%`
-          
-          if (p >= 100) {
-            clearInterval(interval)
-            showToast('✅ Upload successful!', 'success')
-            setTimeout(() => window.location.href = 'gallery.html', 1500)
-          }
-        }, 150)
+        showToast('✅ Upload successful!');
+        setTimeout(() => window.location.href = 'gallery.html', 1000);
         
       } catch (err) {
-        console.error('Upload error:', err)
-        showToast('❌ ' + err.message, 'error')
-        progress.classList.remove('visible')
-        uploadBtn.disabled = false
+        showToast('❌ ' + err.message);
+        uploadBtn.disabled = false; uploadBtn.textContent = '✅ Upload to Cloud';
       }
+    };
+
+    function showToast(msg) {
+      toast.textContent = msg; toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Toast
-    function showToast(msg, type = 'success') {
-      toast.textContent = msg
-      toast.className = `toast ${type} show`
-      setTimeout(() => toast.classList.remove('show'), 3000)
-    }
+    guard();
   </script>
 </body>
 </html>
