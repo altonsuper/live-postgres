@@ -8,38 +8,60 @@
     :root { --bg:#040508; --accent:#00ced1; --glass:rgba(255,255,255,0.04); --border:rgba(0,206,209,0.15); --text:#e8f0ff; --sec:#8a9ab0; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; min-height:100vh; padding:2rem; }
-    .container { max-width:600px; margin:0 auto; }
+    .container { max-width:700px; margin:0 auto; }
     h1 { text-align:center; color:var(--accent); margin-bottom:2rem; }
-    .drop { border:2px dashed var(--border); border-radius:18px; padding:3rem 2rem; text-align:center; background:var(--glass); cursor:pointer; }
-    .drop:hover { border-color:var(--accent); }
+    .drop { border:2px dashed var(--border); border-radius:18px; padding:3rem 2rem; text-align:center; background:var(--glass); cursor:pointer; transition:all 0.3s; }
+    .drop:hover, .drop.dragover { border-color:var(--accent); background:rgba(0,206,209,0.05); }
     input[type="file"] { display:none; }
-    .preview { margin-top:1.5rem; padding:1rem; background:var(--glass); border-radius:12px; display:none; }
-    .preview img, .preview video, .preview audio { max-width:100%; margin-bottom:0.5rem; border-radius:8px; }
-    .btn { width:100%; padding:0.8rem; margin-top:1rem; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
+    .preview { margin-top:2rem; padding:1.5rem; background:var(--glass); border-radius:12px; display:none; border:1px solid var(--border); }
+    .preview.show { display:block; animation:slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .media-container { background:rgba(0,0,0,0.2); border-radius:8px; padding:1rem; margin-bottom:1rem; min-height:200px; display:flex; align-items:center; justify-content:center; }
+    .media-container img, .media-container video { max-width:100%; max-height:300px; border-radius:8px; }
+    .media-container audio { width:100%; }
+    .file-info { color:var(--sec); font-size:0.9rem; margin:0.5rem 0; text-align:center; }
+    .btn { width:100%; padding:1rem; margin-top:1rem; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:1rem; }
     .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .btn-cancel { background:transparent; border:1px solid var(--border); color:var(--text); margin-top:0.5rem; }
+    .progress { margin-top:1rem; display:none; }
+    .progress.show { display:block; }
+    .progress-bar { height:8px; background:rgba(0,0,0,0.3); border-radius:4px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--accent); width:0%; transition:width 0.3s; }
+    .progress-text { text-align:center; color:var(--sec); font-size:0.9rem; margin-top:0.5rem; }
     .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); padding:0.8rem 1.5rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; display:none; z-index:999; }
-    .toast.show { display:block; animation:up 0.3s; }
-    @keyframes up { from { transform:translateX(-50%) translateY(20px); } to { transform:translateX(-50%) translateY(0); } }
-    .warning-box { background:rgba(255,159,67,0.1); border:1px solid #ff9f43; border-radius:8px; padding:0.8rem; margin:0.5rem 0; font-size:0.9rem; color:#ff9f43; }
+    .toast.show { display:block; animation:slideUp 0.3s; }
+    @keyframes slideUp { from { transform:translateX(-50%) translateY(20px); } to { transform:translateX(-50%) translateY(0); } }
+    .debug { margin-top:1rem; padding:0.5rem; background:rgba(0,0,0,0.3); border-radius:4px; font-size:0.75rem; font-family:monospace; color:#888; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>📤 Upload Media</h1>
-    <div class="drop" onclick="document.getElementById('file').click()">
-      <p>📁 Tap to select or drop file</p>
-      <p style="color:var(--sec); font-size:0.9rem">Supports: JPG, PNG, MP4, WEBM, MP3, HTML, PDF</p>
-      <input type="file" id="file" accept="image/*,video/*,audio/*,.html,.pdf,.txt">
+    
+    <div class="drop" id="dropZone">
+      <p style="font-size:1.2rem; margin-bottom:0.5rem;">📁</p>
+      <p>Drop files here or click to browse</p>
+      <p style="color:var(--sec); font-size:0.9rem; margin-top:0.5rem">Supports: JPG, PNG, MP4, WEBM, MP3, PDF, HTML</p>
+      <input type="file" id="fileInput" accept="image/*,video/*,audio/*,.pdf,.html,.txt" />
     </div>
+
     <div class="preview" id="preview">
-      <div id="media"></div>
-      <p id="info" style="color:var(--sec); font-size:0.9rem; margin-top:0.5rem;"></p>
-      <div id="html-warning" class="warning-box" style="display:none">
-        ⚠️ <strong>HTML File Warning:</strong> This file can contain scripts. It will be stored securely but should only be downloaded & opened by trusted users.
-      </div>
+      <h3 style="margin-bottom:1rem;">🔍 Preview</h3>
+      <div class="media-container" id="mediaContainer"></div>
+      <p class="file-info" id="fileInfo"></p>
+      
       <button class="btn" id="uploadBtn">✅ Upload to Cloud</button>
+      <button class="btn btn-cancel" id="cancelBtn">❌ Cancel</button>
+      
+      <div class="progress" id="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <p class="progress-text" id="progressText">Preparing...</p>
+      </div>
     </div>
+    
+    <div class="debug" id="debug"></div>
   </div>
+  
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,91 +69,194 @@
     const SUPABASE_URL = "https://zmtudgbebtnoiysebeli.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const fileInput = document.getElementById('file');
+    
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('preview');
-    const media = document.getElementById('media');
-    const info = document.getElementById('info');
+    const mediaContainer = document.getElementById('mediaContainer');
+    const fileInfo = document.getElementById('fileInfo');
     const uploadBtn = document.getElementById('uploadBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const progress = document.getElementById('progress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
     const toast = document.getElementById('toast');
-    const htmlWarning = document.getElementById('html-warning');
+    const debug = document.getElementById('debug');
+    
     let selectedFile = null;
+    let session = null;
 
-    async function guard() {
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) { window.location.href = 'index.html'; return null; }
-      return data.session;
+    function log(msg) {
+      console.log('[Upload]', msg);
+      debug.textContent = msg;
     }
 
-    fileInput.onchange = (e) => {
-      const f = e.target.files[0]; if (!f) return;
-      selectedFile = f;
-      const url = URL.createObjectURL(f);
-      
-      // Preview
-      if (f.type.startsWith('image/')) media.innerHTML = `<img src="${url}">`;
-      else if (f.type.startsWith('video/')) media.innerHTML = `<video src="${url}" controls></video>`;
-      else if (f.type.startsWith('audio/')) media.innerHTML = `<audio src="${url}" controls style="width:100%"></audio>`;
-      else media.innerHTML = `<div style="height:180px; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.2); border-radius:8px">📄 ${f.name.split('.').pop().toUpperCase()}</div>`;
-      
-      info.textContent = `${f.name} • ${(f.size/1024).toFixed(1)} KB`;
-      
-      // HTML warning
-      htmlWarning.style.display = f.name.toLowerCase().endsWith('.html') ? 'block' : 'none';
-      
-      preview.style.display = 'block';
-    };
+    // Auth guard
+    async function checkAuth() {
+      log("Checking auth...");
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session) {
+        log("Not authenticated, redirecting to index.html");
+        window.location.href = "index.html";
+        return false;
+      }
+      session = data.session;
+      log("Authenticated: " + session.user.email);
+      return true;
+    }
 
-    uploadBtn.onclick = async () => {
-      if (!selectedFile) return;
-      const session = await guard(); if (!session) return;
+    // Drop zone events
+    dropZone.addEventListener('click', () => {
+      log("Drop zone clicked, triggering file input");
+      fileInput.click();
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        log("File dropped: " + files[0].name);
+        handleFile(files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        log("File selected: " + e.target.files[0].name);
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      selectedFile = file;
+      const url = URL.createObjectURL(file);
       
-      // HTML confirmation
-      if (selectedFile.name.toLowerCase().endsWith('.html')) {
-        if (!confirm('⚠️ HTML files can contain scripts. Continue upload?')) return;
+      // Preview based on file type
+      if (file.type.startsWith('image/')) {
+        mediaContainer.innerHTML = `<img src="${url}" alt="${file.name}">`;
+      } else if (file.type.startsWith('video/')) {
+        mediaContainer.innerHTML = `<video src="${url}" controls></video>`;
+      } else if (file.type.startsWith('audio/')) {
+        mediaContainer.innerHTML = `<audio src="${url}" controls></audio>`;
+      } else {
+        const ext = file.name.split('.').pop().toUpperCase();
+        mediaContainer.innerHTML = `<div style="font-size:3rem;">📄</div><p style="margin-top:0.5rem">${ext}</p>`;
       }
       
-      uploadBtn.disabled = true; uploadBtn.textContent = '⏳ Uploading...';
+      fileInfo.textContent = `${file.name} • ${(file.size / 1024).toFixed(1)} KB • ${file.type || 'unknown'}`;
+      preview.classList.add('show');
+      log("Preview shown");
+    }
+
+    cancelBtn.addEventListener('click', () => {
+      log("Upload cancelled");
+      preview.classList.remove('show');
+      selectedFile = null;
+      fileInput.value = '';
+      progress.classList.remove('show');
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!selectedFile) {
+        showToast('❌ No file selected', 'error');
+        return;
+      }
+      
+      log("Starting upload: " + selectedFile.name);
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '⏳ Uploading...';
+      progress.classList.add('show');
       
       try {
-        // Folder = email with @ replaced (for RLS)
+        // Create safe folder name from email
         const safeEmail = session.user.email.replace(/[^a-zA-Z0-9]/g, '_');
         const ext = selectedFile.name.split('.').pop();
-        const path = `${safeEmail}/${Date.now()}.${ext}`;
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(7);
+        const filePath = `${safeEmail}/${timestamp}_${randomStr}.${ext}`;
+        
+        log("Uploading to: " + filePath);
+        progressText.textContent = "Uploading to storage...";
+        progressFill.style.width = '30%';
         
         // Upload to Storage
-        const { error: upErr } = await supabase.storage.from('user-uploads').upload(path, selectedFile, { contentType: selectedFile.type || 'application/octet-stream' });
-        if (upErr) throw upErr;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('user-uploads')
+          .upload(filePath, selectedFile, {
+            contentType: selectedFile.type || 'application/octet-stream',
+            upsert: false
+          });
         
-        // Get public URL (signed for private bucket)
-        const { data: signed } = await supabase.storage.from('user-uploads').createSignedUrl(path, 60*60*24*7); // 7 days
-        if (!signed?.signedUrl) throw new Error('Failed to get download URL');
+        if (uploadError) throw uploadError;
+        log("Storage upload success");
         
-        // Save metadata to DB
-        const { error: dbErr } = await supabase.from('uploads').insert({
+        progressText.textContent = "Getting download URL...";
+        progressFill.style.width = '60%';
+        
+        // Get signed URL (valid for 7 days)
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from('user-uploads')
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+        
+        if (signedError) throw signedError;
+        if (!signedData?.signedUrl) throw new Error('No signed URL returned');
+        
+        log("Signed URL obtained");
+        progressText.textContent = "Saving to database...";
+        progressFill.style.width = '80%';
+        
+        // Save metadata to database
+        const { error: dbError } = await supabase.from('uploads').insert({
           user_email: session.user.email,
           user_id: session.user.id,
           file_name: selectedFile.name,
-          file_path: signed.signedUrl,
+          file_path: signedData.signedUrl,
           file_type: selectedFile.type || 'application/octet-stream',
           file_size: selectedFile.size
         });
-        if (dbErr) throw dbErr;
         
-        showToast('✅ Upload successful!');
-        setTimeout(() => window.location.href = 'gallery.html', 1000);
+        if (dbError) throw dbError;
+        log("Database insert success");
+        
+        progressFill.style.width = '100%';
+        progressText.textContent = "Complete!";
+        
+        showToast('✅ Upload successful!', 'success');
+        setTimeout(() => {
+          log("Redirecting to gallery.html");
+          window.location.href = 'gallery.html';
+        }, 1000);
         
       } catch (err) {
-        showToast('❌ ' + err.message);
-        uploadBtn.disabled = false; uploadBtn.textContent = '✅ Upload to Cloud';
+        log("Upload error: " + err.message);
+        console.error(err);
+        showToast('❌ ' + err.message, 'error');
+        progress.classList.remove('show');
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = '✅ Upload to Cloud';
       }
-    };
+    });
 
-    function showToast(msg) {
-      toast.textContent = msg; toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+    function showToast(msg, type = 'success') {
+      toast.textContent = msg;
+      toast.style.borderColor = type === 'error' ? '#ff6b9d' : 'var(--border)';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
     }
 
-    guard();
+    // Init
+    log("Page loaded");
+    checkAuth();
   </script>
 </body>
 </html>
