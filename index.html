@@ -4,13 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- ✅ GOOGLE SITE VERIFICATION -->
+  <!-- 🔍 GOOGLE SEARCH CONSOLE (VERIFIED) -->
   <meta name="google-site-verification" content="pnMO71pG0tx4Qb-05hMFPJd44bHPGA509iVMZzBE_NQ" />
   
-  <!-- 🚀 AUTO REDIRECT (2 seconds) -->
-  <meta http-equiv="refresh" content="2;url=upload.html" />
+  <!-- 📊 GOOGLE ANALYTICS 4 (Uncomment & paste your ID when ready) -->
+  <!--
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX', { 'anonymize_ip': true });
+  </script>
+  -->
   
-  <title>NEXUS // MCALTONZ 2026</title>
+  <title>MCALTONZ 2026 — Media Workspace</title>
   
   <style>
     /* 🌍 GLOBAL DESIGN SYSTEM */
@@ -30,14 +38,14 @@
       font-family: var(--font-main); overflow-x: hidden; min-height: 100vh;
     }
 
-    /* 🌐 DEPTH LAYER BACKGROUND */
+    /* 🌐 DEPTH BACKGROUND (Lightweight CSS-only) */
     .depth-bg {
       position: fixed; inset: 0; z-index: -1;
       background: radial-gradient(circle at 20% 30%, rgba(112,0,255,0.15) 0%, transparent 40%),
                   radial-gradient(circle at 80% 70%, rgba(0,243,255,0.12) 0%, transparent 40%),
                   var(--bg-deep);
     }
-    .depth-bg::before, .depth-bg::after {
+    .depth-bg::after {
       content: ""; position: absolute; inset: 0;
       background-image: 
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
@@ -69,7 +77,7 @@
       padding: 0.6rem 1rem; border-radius: var(--radius-md);
       background: var(--glass-bg); border: 1px solid var(--glass-border);
       color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
-      transition: var(--transition-smooth); position: relative; overflow: hidden;
+      transition: var(--transition-smooth);
     }
     .nav-link:hover, .nav-link.active {
       color: var(--text-primary); border-color: var(--accent-cyan);
@@ -82,69 +90,98 @@
       justify-content: center; align-items: center; text-align: center;
       padding: 6rem 2rem 2rem;
     }
-    .hero h1 {
-      font-size: clamp(2.5rem, 8vw, 5rem); line-height: 1.1; margin-bottom: 1rem;
+    .brand {
+      font-size: clamp(2.5rem, 8vw, 5rem); line-height: 1.1; margin-bottom: 0.5rem;
       background: linear-gradient(135deg, #fff, var(--accent-cyan), var(--accent-violet));
       -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-    .hero p { color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem; font-size: 1.1rem; }
+    .tagline { color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem; font-size: 1.1rem; }
 
-    /* ⚡ SKIP BUTTON */
-    .skip-btn {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 1rem 2rem; margin: 1rem 0;
+    /* 🎯 PRIMARY CTA */
+    .cta-primary {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 1rem 2.2rem; margin: 1rem 0;
       background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
-      color: #000; text-decoration: none; font-weight: 600;
-      border-radius: var(--radius-lg); transition: var(--transition-smooth);
-      border: none; cursor: pointer; font-size: 1rem;
+      color: #000; text-decoration: none; font-weight: 700;
+      border-radius: 50px; transition: var(--transition-smooth);
+      border: none; cursor: pointer; font-size: 1.05rem;
     }
-    .skip-btn:hover {
+    .cta-primary:hover {
       box-shadow: 0 0 25px rgba(0,243,255,0.5);
       transform: translateY(-2px);
     }
 
-    /* 🎮 PORTAL CARDS */
+    /* 🔗 Secondary Nav Links */
+    .quick-links { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin: 1.5rem 0; }
+    .quick-link {
+      padding: 0.5rem 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); color: var(--text-secondary); text-decoration: none;
+      font-size: 0.9rem; transition: var(--transition-smooth);
+    }
+    .quick-link:hover { color: var(--text-primary); border-color: var(--accent-cyan); }
+
+    /* 🖼️ UPLOADED MEDIA PREVIEW (UI Placeholder - Backend Ready Hook) */
+    .preview-section {
+      width: 100%; max-width: 900px; margin: 3rem auto 0; padding: 0 1rem;
+    }
+    .preview-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem;
+    }
+    .preview-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.8rem;
+    }
+    .preview-item {
+      aspect-ratio: 1; background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .preview-item:hover { border-color: var(--accent-cyan); transform: translateY(-2px); }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-placeholder {
+      text-align: center; padding: 2rem; color: var(--text-secondary);
+      border: 1px dashed var(--glass-border); border-radius: var(--radius-lg);
+    }
+    .preview-placeholder .hint { font-size: 0.85rem; margin-top: 0.5rem; }
+
+    /* 🎮 PORTAL CARDS (Visual Navigation) */
     .portal-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem; width: 100%; max-width: 1100px; margin-top: 2rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem; width: 100%; max-width: 1000px; margin: 2rem auto 0; padding: 0 1rem;
     }
     .portal-card {
       background: var(--glass-bg); border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg); padding: 2rem; position: relative;
-      cursor: pointer; overflow: hidden;
+      border-radius: var(--radius-lg); padding: 1.8rem; position: relative;
+      cursor: pointer; overflow: hidden; text-decoration: none; color: inherit;
       transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
-      transform-style: preserve-3d; text-decoration: none; color: inherit;
+      transform-style: preserve-3d;
     }
     .portal-card::before {
       content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s;
-      background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(0,243,255,0.2) 0%, transparent 70%);
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,243,255,0.15) 0%, transparent 70%);
       pointer-events: none;
     }
     .portal-card:hover::before { opacity: 1; }
-    .portal-card:hover { transform: translateY(-8px) rotateX(2deg) rotateY(2deg); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-    .card-title { font-size: 1.3rem; margin-bottom: 0.5rem; }
-    .card-desc { color: var(--text-secondary); font-size: 0.95rem; }
-    .card-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
-
-    /* 🔄 REDIRECT NOTICE */
-    .redirect-notice {
-      margin-top: 3rem; padding: 1rem 2rem;
-      background: rgba(0,243,255,0.1); border: 1px solid var(--accent-cyan);
-      border-radius: var(--radius-md); font-size: 0.9rem; color: var(--accent-cyan);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .portal-card:hover { transform: translateY(-6px) rotateX(1.5deg) rotateY(1.5deg); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+    .card-icon { font-size: 1.8rem; margin-bottom: 0.8rem; display: block; }
+    .card-title { font-size: 1.2rem; margin-bottom: 0.4rem; }
+    .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
 
     /* 🌊 ANIMATIONS */
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+    .reveal { opacity: 0; transform: translateY(25px); transition: opacity 0.7s ease, transform 0.7s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
-    .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.2s; }
-    .stagger-3 { transition-delay: 0.3s; } .stagger-4 { transition-delay: 0.4s; }
+    .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.15s; }
+    .stagger-3 { transition-delay: 0.2s; } .stagger-4 { transition-delay: 0.25s; }
 
     /* 📱 RESPONSIVE */
     @media (max-width: 600px) { 
-      .nav { flex-direction: column; gap: 1rem; } 
-      .nav-links { justify-content: center; } 
+      .nav { flex-direction: column; gap: 1rem; padding: 0.8rem 1rem; }
+      .nav-links { width: 100%; justify-content: center; }
+      .portal-grid { grid-template-columns: 1fr; }
+      .preview-grid { grid-template-columns: repeat(3, 1fr); }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; transform: none !important; }
@@ -154,8 +191,9 @@
 <body>
   <div class="depth-bg"></div>
 
+  <!-- 🖥️ NAV -->
   <nav class="nav">
-    <div class="logo">NEXUS</div>
+    <div class="logo">MCALTONZ 2026</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link active">Home</a>
       <a href="private.html" class="nav-link">Private</a>
@@ -166,58 +204,89 @@
     </div>
   </nav>
 
+  <!-- 📦 HERO + CTA -->
   <main class="hero">
-    <h1 class="reveal">WELCOME TO THE NEXUS</h1>
-    <p class="reveal stagger-1">Futuristic, lightweight, and fully interactive. Navigate your secure workspace with 5D depth, dynamic lighting, and smooth transitions.</p>
-
-    <!-- ⚡ SKIP BUTTON (Instant Access) -->
-    <a href="upload.html" class="skip-btn reveal stagger-2" onclick="sessionStorage.setItem('skipRedirect','1')">
-      ⚡ Skip Intro → Upload Now
-    </a>
-
-    <!-- 🔄 REDIRECT NOTICE -->
-    <div class="redirect-notice reveal stagger-3">
-      🚀 Auto-redirecting to Upload Studio in <strong id="countdown">2</strong> seconds...
+    <h1 class="brand reveal">MCALTONZ 2026</h1>
+    <p class="tagline reveal stagger-1">Secure media workspace. Upload, manage, and share — with futuristic flow.</p>
+    
+    <!-- 🎯 PRIMARY ACTION: Direct to upload (NO REDIRECT) -->
+    <a href="upload.html" class="cta-primary reveal stagger-2">📤 Try to Upload? Click Here</a>
+    
+    <!-- 🔗 Quick Nav -->
+    <div class="quick-links reveal stagger-3">
+      <a href="gallery.html" class="quick-link">🖼️ Gallery</a>
+      <a href="dashboard.html" class="quick-link">📊 Stats</a>
+      <a href="private.html" class="quick-link">🔐 Access</a>
     </div>
 
-    <!-- 🎮 PORTAL CARDS (Visual Only - Links Work) -->
+    <!-- 🖼️ UPLOADED MEDIA PREVIEW (Placeholder - Backend Hook) -->
+    <section class="preview-section reveal">
+      <div class="preview-header">
+        <span>📸 Recent Uploads</span>
+        <a href="gallery.html" class="quick-link" style="padding:0.3rem 0.7rem;font-size:0.85rem">View All →</a>
+      </div>
+      
+      <!-- ⚠️ BACKEND HOOK: Replace this div with dynamic fetch when ready -->
+      <div id="media-preview" class="preview-grid">
+        <!-- Mock items (remove when connecting Supabase) -->
+        <div class="preview-item" title="Demo: mountain.jpg">🖼️</div>
+        <div class="preview-item" title="Demo: clip.mp4">🎬</div>
+        <div class="preview-item" title="Demo: track.mp3">🎵</div>
+        <div class="preview-item" title="Demo: design.png">🎨</div>
+      </div>
+      
+      <!-- Fallback if no items -->
+      <div id="preview-empty" class="preview-placeholder" style="display:none">
+        <div>✨ No uploads yet</div>
+        <div class="hint">Be the first! <a href="upload.html" style="color:var(--accent-cyan)">Upload now →</a></div>
+      </div>
+    </section>
+
+    <!-- 🎮 PORTAL CARDS (Visual Navigation) -->
     <div class="portal-grid">
       <a href="private.html" class="portal-card reveal stagger-1" data-tilt>
         <span class="card-icon">🔑</span>
         <h3 class="card-title">Private Access</h3>
-        <p class="card-desc">Secure your session with dynamic key input & animated validation.</p>
+        <p class="card-desc">Secure session with animated key validation.</p>
       </a>
       <a href="dashboard.html" class="portal-card reveal stagger-2" data-tilt>
         <span class="card-icon">📊</span>
         <h3 class="card-title">Dashboard</h3>
-        <p class="card-desc">Real-time stats, interactive charts, and sleek data visualization.</p>
+        <p class="card-desc">Stats, charts, and real-time insights.</p>
       </a>
       <a href="upload.html" class="portal-card reveal stagger-3" data-tilt>
         <span class="card-icon">📤</span>
-        <h3 class="card-title">Media Upload</h3>
-        <p class="card-desc">Drag & drop interface with live preview & progress feedback.</p>
+        <h3 class="card-title">Upload Studio</h3>
+        <p class="card-desc">Drag, drop, preview — with camera support.</p>
       </a>
       <a href="gallery.html" class="portal-card reveal stagger-4" data-tilt>
         <span class="card-icon">🖼️</span>
         <h3 class="card-title">Gallery</h3>
-        <p class="card-desc">Search, filter, and explore your media with glassmorphism cards.</p>
+        <p class="card-desc">Search, zoom, download — immersive viewer.</p>
       </a>
     </div>
   </main>
 
+  <!-- Supabase SDK (for future auth/media fetch) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <script>
-    // 🧠 LIGHTWEIGHT 5D ENGINE
-    (function() {
-      // 1. Scroll Reveal
+    // 🔐 Supabase config (ready for when you connect backend)
+    const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // ✅ UI Engine: Scroll Reveal + Mouse Tilt (Lightweight)
+    (function initUI() {
+      // Scroll Reveal
       const reveals = document.querySelectorAll('.reveal');
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(e => e.isIntersecting && e.target.classList.add('visible'));
       }, { threshold: 0.1 });
       reveals.forEach(el => observer.observe(el));
 
-      // 2. Mouse-Tracking Glow + Tilt
-      const cards = document.querySelectorAll('[data-tilt]');
-      cards.forEach(card => {
+      // Mouse-Tracking Glow + Tilt
+      document.querySelectorAll('[data-tilt]').forEach(card => {
         card.addEventListener('mousemove', (e) => {
           const rect = card.getBoundingClientRect();
           const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -227,31 +296,58 @@
         });
       });
 
-      // 3. Reduced Motion Fallback
+      // Reduced Motion Fallback
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+        reveals.forEach(el => el.classList.add('visible'));
       }
-
-      // 4. Countdown + Redirect
-      let seconds = 2;
-      const countdown = document.getElementById('countdown');
-      const timer = setInterval(() => {
-        seconds--;
-        if (countdown) countdown.textContent = seconds;
-        if (seconds <= 0) {
-          clearInterval(timer);
-          // Only redirect if user didn't click skip
-          if (!sessionStorage.getItem('skipRedirect')) {
-            window.location.href = 'upload.html?auto=true';
-          }
-        }
-      }, 1000);
-
-      // 5. Clear skip flag on page unload (optional)
-      window.addEventListener('beforeunload', () => {
-        sessionStorage.removeItem('skipRedirect');
-      });
     })();
+
+    // 🖼️ MEDIA PREVIEW HOOK (Backend Ready - Currently Mock)
+    // ⚠️ UNCOMMENT & CONNECT WHEN SUPABASE IS READY:
+    /*
+    async function loadRecentUploads() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) {
+        document.getElementById('media-preview').style.display = 'none'
+        document.getElementById('preview-empty').style.display = 'block'
+        return
+      }
+      
+      const {  items, error } = await supabase
+        .from('uploads')
+        .select('id, file_name, file_path, file_type')
+        .eq('user_email', session.user.email)
+        .order('created_at', { ascending: false })
+        .limit(4)
+      
+      if (error || !items?.length) {
+        document.getElementById('media-preview').style.display = 'none'
+        document.getElementById('preview-empty').style.display = 'block'
+        return
+      }
+      
+      const container = document.getElementById('media-preview')
+      container.innerHTML = ''
+      items.forEach(item => {
+        const div = document.createElement('div')
+        div.className = 'preview-item'
+        div.title = item.file_name
+        if (item.file_type.startsWith('image/')) {
+          // Use Supabase public URL: https://YOUR_PROJECT.supabase.co/storage/v1/object/public/media/${item.file_path}
+          div.innerHTML = `<img src="${item.file_path}" alt="${item.file_name}" loading="lazy">`
+        } else {
+          div.textContent = item.file_type.startsWith('video/') ? '🎬' : item.file_type.startsWith('audio/') ? '🎵' : '📄'
+        }
+        div.onclick = () => window.location.href = `gallery.html?focus=${item.id}`
+        container.appendChild(div)
+      })
+    }
+    // Call on load (optional)
+    // loadRecentUploads()
+    */
+
+    // Expose for debugging
+    window.supabase = supabase
   </script>
 </body>
 </html>
