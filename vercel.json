@@ -1,9 +1,30 @@
 {
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.{css,js,png,jpg,jpeg,webp,svg,gif,mp4,webm,mp3,wav,pdf,txt,csv,ico}",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "outputDirectory": ".",
+  "github": {
+    "silent": true
+  },
   "headers": [
     {
-      "source": "/(index\\.html|upload\\.html|gallery\\.html)",
+      "source": "/(index\\.html|upload\\.html|gallery\\.html|private\\.html|admin-ready\\.html|dashboard\\.html)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+        { "key": "Cache-Control", "value": "no-store, max-age=0, must-revalidate" }
       ]
     }
   ]
