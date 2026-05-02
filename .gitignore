@@ -3,6 +3,7 @@
 .env.*
 config.json
 config.local.json
+links.md
 *.key
 *.pem
 service_role_key.txt

@@ -2,73 +2,98 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>🚀 PostgreSQL + Auth + Storage</title>
+  <title>🚀 Media SaaS</title>
   <style>
-    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:600px; margin:0 auto; }
-    input { width:100%; padding:0.8rem; margin:0.3rem 0; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; }
-    button { padding:0.8rem 1.5rem; margin:0.3rem; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; cursor:pointer; font-weight:bold; }
-    button:hover { background:#00ff9d; color:#0a0a0f; }
-    #user-ui { display:none; }
-    .hidden { display:none !important; }
-    small { color:#666; }
+    body { background:#0a0a0f; color:#00ff9d; font-family:monospace; padding:2rem; max-width:700px; margin:0 auto; }
+    h1 { text-align:center; margin-bottom:2rem; }
+    .card { background:#1a1a2e; padding:1.5rem; margin:1rem 0; border-left:3px solid #00ff9d; border-radius:6px; }
+    .btn { display:block; width:100%; padding:1rem; margin:0.5rem 0; background:#1a1a2e; border:2px solid #00ff9d; color:#00ff9d; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px; transition:all 0.2s; }
+    .btn:hover { background:#00ff9d; color:#0a0a0f; transform:translateY(-2px); }
+    .btn-admin { border-color:#ff6b6b; color:#ff6b6b; }
+    .btn-admin:hover { background:#ff6b6b; color:#0a0a0f; }
+    .btn-disabled { opacity:0.5; cursor:not-allowed; border-style:dashed; }
+    input { width:100%; padding:0.8rem; margin:0.3rem 0; background:#0a0a0f; border:1px solid #00ff9d; color:#00ff9d; border-radius:4px; box-sizing:border-box; }
+    small { color:#888; display:block; text-align:center; margin-top:2rem; }
+    .hidden { display:none; }
+    #status { margin:1rem 0; padding:1rem; background:#0a0a0f; border-radius:4px; min-height:1.5rem; text-align:center; }
+    .admin-key { background:#0a0a0f; padding:0.3rem 0.6rem; border-radius:2px; font-family:monospace; color:#ff6b6b; }
   </style>
 </head>
 <body>
-  <h1>🚀 PostgreSQL + Auth + Storage</h1>
-  
-  <!-- Auth UI -->
-  <div id="auth-ui">
+  <h1>🚀 Media SaaS</h1>
+
+  <!-- 🔑 ADMIN QUICK ACCESS (No login needed) -->
+  <div class="card">
+    <h3 style="margin-top:0">👑 Admin Quick Access</h3>
+    <small>Key: <span class="admin-key">secret2026qwen</span></small>
+    
+    <a href="private.html?key=secret2026qwen" class="btn btn-admin">🌉 Admin Bridge</a>
+    <a href="admin-ready.html?key=secret2026qwen" class="btn btn-admin">👑 Admin Ready Page</a>
+    <a href="upload.html?admin=true" class="btn btn-admin">⬆️ Direct Upload</a>
+    <a href="gallery.html?admin=true" class="btn btn-admin">📂 View All Files</a>
+    
+    <small style="margin-top:0.5rem; color:#ff6b6b">⚠️ Keep this key secret. Do not share.</small>
+  </div>
+
+  <!-- 🔐 PUBLIC LOGIN (Email/Password Only - OAuth Disabled Temporarily) -->
+  <div class="card">
+    <h3 style="margin-top:0">🔐 Public Login</h3>
+    <small>OAuth (Google/GitHub) temporarily disabled. Use email/password or admin links above.</small>
+    
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
-    <div style="margin:1rem 0">
-      <button onclick="signIn()">Sign In</button>
-      <button onclick="signUp()">Sign Up</button>
+    
+    <button onclick="signIn()" class="btn">Sign In</button>
+    <button onclick="signUp()" class="btn">Sign Up</button>
+    
+    <div id="status"></div>
+    
+    <!-- OAuth Buttons (Disabled) -->
+    <div style="margin-top:1rem; opacity:0.5">
+      <button class="btn btn-disabled" disabled>🔵 Google (Temp Disabled)</button>
+      <button class="btn btn-disabled" disabled>🐙 GitHub (Temp Disabled)</button>
+      <small style="margin-top:0.3rem">OAuth will be re-enabled after config fix</small>
     </div>
-    <div style="margin:1rem 0">
-      <button id="google">🔵 Google</button>
-      <button id="github">🐙 GitHub</button>
-    </div>
-    <small>✅ No VPS. No config. Just code.</small>
   </div>
 
-  <!-- User UI (shown after login) -->
-  <div id="user-ui">
-    <p>👤 Logged in as: <strong id="user-email"></strong></p>
-    <button onclick="signOut()">🚪 Logout</button>
-    <div style="margin-top:2rem">
-      <textarea id="message" placeholder="Type a message..." style="width:100%; min-height:80px; background:#1a1a2e; border:1px solid #00ff9d; color:#00ff9d; padding:0.5rem;"></textarea>
-      <button onclick="postMessage()" style="margin-top:0.5rem">💬 Post Message</button>
+  <!-- 👤 USER UI (Shown after login) -->
+  <div id="user-ui" class="hidden">
+    <div class="card">
+      <p>👤 Logged in as: <strong id="user-email"></strong></p>
+      <button onclick="signOut()" class="btn">🚪 Logout</button>
     </div>
-    <div id="messages" style="margin-top:1rem; max-height:300px; overflow-y:auto"></div>
+    
+    <div class="card">
+      <h3>⚡ Quick Actions</h3>
+      <a href="upload.html" class="btn">📤 Upload Media</a>
+      <a href="gallery.html" class="btn">🖼️ My Gallery</a>
+      <a href="dashboard.html" class="btn">📊 Dashboard</a>
+    </div>
   </div>
 
-  <!-- Supabase CDN + App Logic -->
+  <!-- Supabase SDK + Logic -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 1. Initialize Supabase
     const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
     const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    // 2. DOM Elements
-    const authUI = document.getElementById('auth-ui')
+    const authUI = document.querySelector('.card:nth-child(2)')
     const userUI = document.getElementById('user-ui')
-    const userEmailEl = document.getElementById('user-email')
-    const messagesEl = document.getElementById('messages')
+    const status = document.getElementById('status')
 
-    // 3. Auth State Handler
+    // Check session on load
     async function checkSession() {
       const {  { session } } = await supabase.auth.getSession()
       if (session?.user) {
         showUser(session.user.email)
-        loadMessages()
       }
     }
 
     function showUser(email) {
       authUI.classList.add('hidden')
       userUI.classList.remove('hidden')
-      userEmailEl.textContent = email
+      document.getElementById('user-email').textContent = email
     }
 
     function showAuth() {
@@ -76,80 +101,51 @@
       userUI.classList.add('hidden')
     }
 
-    // 4. Auth Actions
+    // Auth actions
     async function signIn() {
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
+      status.textContent = '🔄 Signing in...'
+      
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) alert('❌ ' + error.message)
-      else checkSession()
+      if (error) {
+        status.textContent = '❌ ' + error.message
+        status.style.color = '#ff6b6b'
+      } else {
+        status.textContent = '✅ Success! Redirecting...'
+        status.style.color = '#00ff9d'
+        setTimeout(() => window.location.href = 'dashboard.html', 1000)
+      }
     }
 
     async function signUp() {
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
+      status.textContent = '🔄 Creating account...'
+      
       const { error } = await supabase.auth.signUp({ email, password })
-      if (error) alert('❌ ' + error.message)
-      else alert('✅ Check your email to confirm')
+      if (error) {
+        status.textContent = '❌ ' + error.message
+        status.style.color = '#ff6b6b'
+      } else {
+        status.textContent = '✅ Check your email to confirm!'
+        status.style.color = '#00ff9d'
+      }
     }
 
     async function signOut() {
       await supabase.auth.signOut()
       showAuth()
+      status.textContent = ''
     }
 
-    // 5. OAuth Buttons (PRODUCTION URL)
-    document.getElementById('google').onclick = async () => {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: 'https://project-4rhm6.vercel.app' }
-      })
-    }
-
-    document.getElementById('github').onclick = async () => {
-      await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: { redirectTo: 'https://project-4rhm6.vercel.app' }
-      })
-    }
-
-    // 6. Message Functions
-    async function postMessage() {
-      const content = document.getElementById('message').value.trim()
-      if (!content) return
-      const { error } = await supabase.from('messages').insert({
-        content,
-        user_email: (await supabase.auth.getUser()).data.user?.email || 'anon'
-      })
-      if (error) alert('❌ ' + error.message)
-      else {
-        document.getElementById('message').value = ''
-        loadMessages()
-      }
-    }
-
-    async function loadMessages() {
-      const {  } = await supabase.from('messages').select('*').order('created_at', { ascending: false }).limit(20)
-      messagesEl.innerHTML = data?.length 
-        ? data.map(m => `<div style="margin:0.5rem 0; padding:0.5rem; background:#1a1a2e; border-left:3px solid #00ff9d;"><strong>${m.user_email || 'anon'}:</strong> ${m.content}<br><small>${new Date(m.created_at).toLocaleString()}</small></div>`).join('')
-        : '<em>No messages yet. Be the first! ✨</em>'
-    }
-
-    // 7. Init on Load
-    window.addEventListener('load', () => {
-      checkSession()
-      // Handle OAuth redirect return
-      if (window.location.hash.includes('access_token')) {
-        checkSession()
-        window.history.replaceState(null, '', window.location.pathname)
-      }
-    })
-
-    // Expose functions for onclick attributes
+    // Expose functions
     window.signIn = signIn
     window.signUp = signUp
     window.signOut = signOut
-    window.postMessage = postMessage
+
+    // Init
+    checkSession()
   </script>
 </body>
 </html>
