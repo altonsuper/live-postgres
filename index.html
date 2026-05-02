@@ -7,6 +7,9 @@
   <!-- 🔍 GOOGLE SEARCH CONSOLE (VERIFIED) -->
   <meta name="google-site-verification" content="pnMO71pG0tx4Qb-05hMFPJd44bHPGA509iVMZzBE_NQ" />
   
+  <!-- 🚫 NO AUTO-REDIRECT — USER CONTROLLED NAVIGATION ONLY -->
+  <!-- ❌ HAPUS JIKA ADA: <meta http-equiv="refresh" content="2;url=upload.html" /> -->
+  
   <!-- 📊 GOOGLE ANALYTICS 4 (Uncomment & paste your ID when ready) -->
   <!--
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -275,6 +278,9 @@
     const SUPABASE_URL = 'https://zmtudgbebtnoiysebeli.supabase.co'
     const SUPABASE_ANON_KEY = 'sb_publishable_U22LM59-HGzGBp0xk8Ouxg_CGngfga8'
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // ✅ DEBUG: Log load time to confirm no redirect script running
+    console.log('🟢 index.html loaded — NO AUTO-REDIRECT — User controls navigation')
 
     // ✅ UI Engine: Scroll Reveal + Mouse Tilt (Lightweight)
     (function initUI() {
