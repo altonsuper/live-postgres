@@ -1,0 +1,5 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root { --bg-deep: #050508; --accent-cyan: #00f3ff; --accent-violet: #7000ff; --text-primary: #e6e8ff; }
+body { background: var(--bg-deep); color: var(--text-primary); }

@@ -10,7 +10,31 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@supabase/supabase-js": "^2.105.1",
+    "@ai-sdk/openai": "^3.0.64",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
+    "ai": "^6.0.184",
     "pg": "^8.20.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/altonsuper/live-postgres.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/altonsuper/live-postgres/issues"
+  },
+  "homepage": "https://github.com/altonsuper/live-postgres#readme",
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "next": "^16.2.6",
+    "postcss": "^8.5.14",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
   }
 }
